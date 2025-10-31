@@ -7,7 +7,7 @@ import { InventoryChart } from "@/components/InventoryChart";
 import { CostAnalysisChart } from "@/components/CostAnalysisChart";
 import { SkuDetailModal } from "@/components/SkuDetailModal";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 
 export default function Dashboard() {
   const [searchValue, setSearchValue] = useState("");
@@ -70,6 +70,33 @@ export default function Dashboard() {
       totalValue: "2,024.75",
       supplier: "AccessoryCorp",
       location: "Warehouse B-12"
+    },
+  ];
+
+  const mockAlternativeSkus = [
+    { 
+      primarySku: "SKU-12345", 
+      alternativeSku: "SKU-12345-ALT", 
+      description: "Standard variant of Premium Widget Pro",
+      conversionRatio: "1.0"
+    },
+    { 
+      primarySku: "SKU-12345", 
+      alternativeSku: "SKU-12346", 
+      description: "Deluxe variant with enhanced features",
+      conversionRatio: "0.8"
+    },
+    { 
+      primarySku: "SKU-23456", 
+      alternativeSku: "SKU-23457", 
+      description: "Budget version of Standard Gadget",
+      conversionRatio: "1.2"
+    },
+    { 
+      primarySku: "SKU-34567", 
+      alternativeSku: "SKU-34568", 
+      description: "Compact version",
+      conversionRatio: "1.5"
     },
   ];
 
@@ -190,6 +217,13 @@ export default function Dashboard() {
     { key: "totalValue", label: "Total Value", sortable: true, render: (value) => `$${value}` },
   ];
 
+  const alternativeSkuColumns: Column<any>[] = [
+    { key: "primarySku", label: "Primary SKU", sortable: true },
+    { key: "alternativeSku", label: "Alternative SKU", sortable: true },
+    { key: "description", label: "Description", sortable: true },
+    { key: "conversionRatio", label: "Conversion Ratio", sortable: true },
+  ];
+
   const orderColumns: Column<any>[] = [
     { key: "orderNumber", label: "Order #", sortable: true },
     { key: "sku", label: "SKU", sortable: true },
@@ -256,6 +290,13 @@ export default function Dashboard() {
     item.category.toLowerCase().includes(searchValue.toLowerCase())
   );
 
+  const filteredAlternatives = mockAlternativeSkus.filter(item =>
+    searchValue === "" ||
+    item.primarySku.toLowerCase().includes(searchValue.toLowerCase()) ||
+    item.alternativeSku.toLowerCase().includes(searchValue.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
   const handleRowClick = (row: any) => {
     setSelectedSku(row.sku);
     setIsModalOpen(true);
@@ -265,9 +306,7 @@ export default function Dashboard() {
     const inventory = mockInventoryData.find(item => item.sku === sku);
     return {
       inventory,
-      alternatives: [
-        { alternativeSku: `${sku}-ALT1`, description: "Standard variant", conversionRatio: "1.0" },
-      ],
+      alternatives: mockAlternativeSkus.filter(alt => alt.primarySku === sku),
       openOrders: mockOpenOrders.filter(order => order.sku === sku),
       purchaseOrders: mockPurchaseOrders.filter(po => po.sku === sku),
       opportunities: mockOpportunities.filter(opp => opp.sku === sku),
@@ -277,9 +316,9 @@ export default function Dashboard() {
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-semibold" data-testid="text-page-title">SKU Warehouse Dashboard</h1>
+        <h1 className="text-3xl font-semibold" data-testid="text-page-title">SKU Warehouse Management</h1>
         <p className="text-muted-foreground">
-          Comprehensive inventory management and analytics platform
+          Real-time inventory tracking, order management, and business analytics
         </p>
       </div>
 
@@ -318,56 +357,60 @@ export default function Dashboard() {
         <CostAnalysisChart data={costAnalysisData} />
       </div>
 
-      <Tabs defaultValue="inventory" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="inventory" data-testid="tab-inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="orders" data-testid="tab-orders">Open Orders</TabsTrigger>
-          <TabsTrigger value="po" data-testid="tab-po">Purchase Orders</TabsTrigger>
-          <TabsTrigger value="leads" data-testid="tab-leads">Leads</TabsTrigger>
-          <TabsTrigger value="opportunities" data-testid="tab-opportunities">Opportunities</TabsTrigger>
-        </TabsList>
+      <Card className="p-6 space-y-4">
+        <h2 className="text-xl font-semibold" data-testid="text-section-inventory">Inventory</h2>
+        <DataTable
+          data={filteredInventory}
+          columns={inventoryColumns}
+          onRowClick={handleRowClick}
+          onExport={(format) => console.log(`Exporting inventory to ${format}`)}
+        />
+      </Card>
 
-        <TabsContent value="inventory">
-          <DataTable
-            data={filteredInventory}
-            columns={inventoryColumns}
-            onRowClick={handleRowClick}
-            onExport={(format) => console.log(`Exporting inventory to ${format}`)}
-          />
-        </TabsContent>
+      <Card className="p-6 space-y-4">
+        <h2 className="text-xl font-semibold" data-testid="text-section-alternatives">Alternative SKUs</h2>
+        <DataTable
+          data={filteredAlternatives}
+          columns={alternativeSkuColumns}
+          onExport={(format) => console.log(`Exporting alternative SKUs to ${format}`)}
+        />
+      </Card>
 
-        <TabsContent value="orders">
-          <DataTable
-            data={mockOpenOrders}
-            columns={orderColumns}
-            onExport={(format) => console.log(`Exporting orders to ${format}`)}
-          />
-        </TabsContent>
+      <Card className="p-6 space-y-4">
+        <h2 className="text-xl font-semibold" data-testid="text-section-open-orders">Open Orders</h2>
+        <DataTable
+          data={mockOpenOrders}
+          columns={orderColumns}
+          onExport={(format) => console.log(`Exporting orders to ${format}`)}
+        />
+      </Card>
 
-        <TabsContent value="po">
-          <DataTable
-            data={mockPurchaseOrders}
-            columns={poColumns}
-            onExport={(format) => console.log(`Exporting purchase orders to ${format}`)}
-          />
-        </TabsContent>
+      <Card className="p-6 space-y-4">
+        <h2 className="text-xl font-semibold" data-testid="text-section-purchase-orders">Purchase Orders</h2>
+        <DataTable
+          data={mockPurchaseOrders}
+          columns={poColumns}
+          onExport={(format) => console.log(`Exporting purchase orders to ${format}`)}
+        />
+      </Card>
 
-        <TabsContent value="leads">
-          <DataTable
-            data={mockLeads}
-            columns={leadColumns}
-            onExport={(format) => console.log(`Exporting leads to ${format}`)}
-          />
-        </TabsContent>
+      <Card className="p-6 space-y-4">
+        <h2 className="text-xl font-semibold" data-testid="text-section-leads">Leads</h2>
+        <DataTable
+          data={mockLeads}
+          columns={leadColumns}
+          onExport={(format) => console.log(`Exporting leads to ${format}`)}
+        />
+      </Card>
 
-        <TabsContent value="opportunities">
-          <DataTable
-            data={mockOpportunities}
-            columns={opportunityColumns}
-            onExport={(format) => console.log(`Exporting opportunities to ${format}`)}
-          />
-        </TabsContent>
-      </Tabs>
+      <Card className="p-6 space-y-4">
+        <h2 className="text-xl font-semibold" data-testid="text-section-opportunities">Opportunities</h2>
+        <DataTable
+          data={mockOpportunities}
+          columns={opportunityColumns}
+          onExport={(format) => console.log(`Exporting opportunities to ${format}`)}
+        />
+      </Card>
 
       {selectedSku && (
         <SkuDetailModal
