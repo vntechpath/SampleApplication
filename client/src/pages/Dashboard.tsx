@@ -2,15 +2,19 @@ import { useState } from "react";
 import { Package, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { SkuSearchInput } from "@/components/SkuSearchInput";
 import { MetricCard } from "@/components/MetricCard";
-import { DataTable, Column } from "@/components/DataTable";
+import { DataTableWithContext, Column } from "@/components/DataTableWithContext";
 import { InventoryChart } from "@/components/InventoryChart";
 import { CostAnalysisChart } from "@/components/CostAnalysisChart";
 import { SkuDetailModal } from "@/components/SkuDetailModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+type MenuOption = 'dashboard' | 'inventory' | 'orders' | 'po' | 'leads' | 'opportunities' | 'analytics';
 
 export default function Dashboard() {
   const [searchValue, setSearchValue] = useState("");
+  const [selectedMenu, setSelectedMenu] = useState<MenuOption>('dashboard');
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -91,12 +95,6 @@ export default function Dashboard() {
       alternativeSku: "SKU-23457", 
       description: "Budget version of Standard Gadget",
       conversionRatio: "1.2"
-    },
-    { 
-      primarySku: "SKU-34567", 
-      alternativeSku: "SKU-34568", 
-      description: "Compact version",
-      conversionRatio: "1.5"
     },
   ];
 
@@ -290,14 +288,7 @@ export default function Dashboard() {
     item.category.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  const filteredAlternatives = mockAlternativeSkus.filter(item =>
-    searchValue === "" ||
-    item.primarySku.toLowerCase().includes(searchValue.toLowerCase()) ||
-    item.alternativeSku.toLowerCase().includes(searchValue.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchValue.toLowerCase())
-  );
-
-  const handleRowClick = (row: any) => {
+  const handleViewDetails = (row: any) => {
     setSelectedSku(row.sku);
     setIsModalOpen(true);
   };
@@ -315,102 +306,181 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div className="space-y-2">
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold" data-testid="text-page-title">SKU Warehouse Management</h1>
-        <p className="text-muted-foreground">
-          Real-time inventory tracking, order management, and business analytics
-        </p>
       </div>
 
-      <div className="max-w-2xl">
-        <SkuSearchInput value={searchValue} onChange={setSearchValue} />
+      <SkuSearchInput value={searchValue} onChange={setSearchValue} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-6">
+        <div className="grid grid-cols-2 gap-4">
+          <MetricCard
+            label="Total SKUs"
+            value="1,247"
+            icon={Package}
+            trend={{ value: "12% vs last month", isPositive: true }}
+          />
+          <MetricCard
+            label="Total Value"
+            value="$2.5M"
+            icon={DollarSign}
+            trend={{ value: "8% vs last month", isPositive: true }}
+          />
+          <MetricCard
+            label="Open Orders"
+            value="342"
+            icon={TrendingUp}
+          />
+          <MetricCard
+            label="Low Stock Items"
+            value="23"
+            icon={AlertTriangle}
+            trend={{ value: "5% vs last week", isPositive: false }}
+          />
+        </div>
+
+        <Card className="p-6">
+          <h3 className="text-sm font-medium uppercase text-muted-foreground mb-4">Alternative SKUs</h3>
+          <div className="space-y-2 max-h-[280px] overflow-y-auto">
+            {mockAlternativeSkus.map((alt, idx) => (
+              <div key={idx} className="p-3 border rounded-md hover-elevate">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="font-mono font-semibold text-sm">{alt.alternativeSku}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{alt.description}</p>
+                  </div>
+                  <p className="font-mono text-xs">×{alt.conversionRatio}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard
-          label="Total SKUs"
-          value="1,247"
-          icon={Package}
-          trend={{ value: "12% vs last month", isPositive: true }}
-        />
-        <MetricCard
-          label="Total Value"
-          value="$2.5M"
-          icon={DollarSign}
-          trend={{ value: "8% vs last month", isPositive: true }}
-        />
-        <MetricCard
-          label="Open Orders"
-          value="342"
-          icon={TrendingUp}
-        />
-        <MetricCard
-          label="Low Stock Items"
-          value="23"
-          icon={AlertTriangle}
-          trend={{ value: "5% vs last week", isPositive: false }}
-        />
+      <div className="flex gap-2 border-b">
+        <Button
+          variant={selectedMenu === 'dashboard' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('dashboard')}
+          data-testid="menu-dashboard"
+          className="rounded-b-none"
+        >
+          Dashboard
+        </Button>
+        <Button
+          variant={selectedMenu === 'inventory' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('inventory')}
+          data-testid="menu-inventory"
+          className="rounded-b-none"
+        >
+          Inventory
+        </Button>
+        <Button
+          variant={selectedMenu === 'orders' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('orders')}
+          data-testid="menu-open-orders"
+          className="rounded-b-none"
+        >
+          Open Orders
+        </Button>
+        <Button
+          variant={selectedMenu === 'po' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('po')}
+          data-testid="menu-purchase-orders"
+          className="rounded-b-none"
+        >
+          Purchase Orders
+        </Button>
+        <Button
+          variant={selectedMenu === 'leads' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('leads')}
+          data-testid="menu-leads"
+          className="rounded-b-none"
+        >
+          Leads
+        </Button>
+        <Button
+          variant={selectedMenu === 'opportunities' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('opportunities')}
+          data-testid="menu-opportunities"
+          className="rounded-b-none"
+        >
+          Opportunities
+        </Button>
+        <Button
+          variant={selectedMenu === 'analytics' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('analytics')}
+          data-testid="menu-analytics"
+          className="rounded-b-none"
+        >
+          Analytics
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <InventoryChart data={inventoryChartData} />
-        <CostAnalysisChart data={costAnalysisData} />
+      <div>
+        {selectedMenu === 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <InventoryChart data={inventoryChartData} />
+            <CostAnalysisChart data={costAnalysisData} />
+          </div>
+        )}
+
+        {selectedMenu === 'inventory' && (
+          <DataTableWithContext
+            data={filteredInventory}
+            columns={inventoryColumns}
+            onViewDetails={handleViewDetails}
+            onExportRow={(row, format) => console.log(`Exporting ${row.sku} to ${format}`)}
+            onOpenWebPage={(row) => window.open(`https://example.com/sku/${row.sku}`, '_blank')}
+          />
+        )}
+
+        {selectedMenu === 'orders' && (
+          <DataTableWithContext
+            data={mockOpenOrders}
+            columns={orderColumns}
+            onViewDetails={(row) => console.log('View order:', row)}
+            onExportRow={(row, format) => console.log(`Exporting ${row.orderNumber} to ${format}`)}
+            onOpenWebPage={(row) => window.open(`https://example.com/order/${row.orderNumber}`, '_blank')}
+          />
+        )}
+
+        {selectedMenu === 'po' && (
+          <DataTableWithContext
+            data={mockPurchaseOrders}
+            columns={poColumns}
+            onViewDetails={(row) => console.log('View PO:', row)}
+            onExportRow={(row, format) => console.log(`Exporting ${row.poNumber} to ${format}`)}
+            onOpenWebPage={(row) => window.open(`https://example.com/po/${row.poNumber}`, '_blank')}
+          />
+        )}
+
+        {selectedMenu === 'leads' && (
+          <DataTableWithContext
+            data={mockLeads}
+            columns={leadColumns}
+            onViewDetails={(row) => console.log('View lead:', row)}
+            onExportRow={(row, format) => console.log(`Exporting ${row.leadNumber} to ${format}`)}
+            onOpenWebPage={(row) => window.open(`https://example.com/lead/${row.leadNumber}`, '_blank')}
+          />
+        )}
+
+        {selectedMenu === 'opportunities' && (
+          <DataTableWithContext
+            data={mockOpportunities}
+            columns={opportunityColumns}
+            onViewDetails={(row) => console.log('View opportunity:', row)}
+            onExportRow={(row, format) => console.log(`Exporting ${row.opportunityNumber} to ${format}`)}
+            onOpenWebPage={(row) => window.open(`https://example.com/opportunity/${row.opportunityNumber}`, '_blank')}
+          />
+        )}
+
+        {selectedMenu === 'analytics' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <InventoryChart data={inventoryChartData} />
+            <CostAnalysisChart data={costAnalysisData} />
+          </div>
+        )}
       </div>
-
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold" data-testid="text-section-inventory">Inventory</h2>
-        <DataTable
-          data={filteredInventory}
-          columns={inventoryColumns}
-          onRowClick={handleRowClick}
-          onExport={(format) => console.log(`Exporting inventory to ${format}`)}
-        />
-      </Card>
-
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold" data-testid="text-section-alternatives">Alternative SKUs</h2>
-        <DataTable
-          data={filteredAlternatives}
-          columns={alternativeSkuColumns}
-          onExport={(format) => console.log(`Exporting alternative SKUs to ${format}`)}
-        />
-      </Card>
-
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold" data-testid="text-section-open-orders">Open Orders</h2>
-        <DataTable
-          data={mockOpenOrders}
-          columns={orderColumns}
-          onExport={(format) => console.log(`Exporting orders to ${format}`)}
-        />
-      </Card>
-
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold" data-testid="text-section-purchase-orders">Purchase Orders</h2>
-        <DataTable
-          data={mockPurchaseOrders}
-          columns={poColumns}
-          onExport={(format) => console.log(`Exporting purchase orders to ${format}`)}
-        />
-      </Card>
-
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold" data-testid="text-section-leads">Leads</h2>
-        <DataTable
-          data={mockLeads}
-          columns={leadColumns}
-          onExport={(format) => console.log(`Exporting leads to ${format}`)}
-        />
-      </Card>
-
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold" data-testid="text-section-opportunities">Opportunities</h2>
-        <DataTable
-          data={mockOpportunities}
-          columns={opportunityColumns}
-          onExport={(format) => console.log(`Exporting opportunities to ${format}`)}
-        />
-      </Card>
 
       {selectedSku && (
         <SkuDetailModal
