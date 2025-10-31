@@ -10,15 +10,58 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-type MenuOption = 'dashboard' | 'inventory' | 'orders' | 'po' | 'leads' | 'opportunities' | 'analytics';
+type MenuOption = 'warehouse' | 'dashboard' | 'inventory' | 'orders' | 'po' | 'leads' | 'opportunities' | 'analytics';
 
 export default function Dashboard() {
   const [searchValue, setSearchValue] = useState("");
-  const [selectedMenu, setSelectedMenu] = useState<MenuOption>('dashboard');
+  const [selectedMenu, setSelectedMenu] = useState<MenuOption>('warehouse');
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // todo: remove mock functionality
+  const mockWarehouseStock = [
+    {
+      warehouseName: "Warehouse A",
+      location: "New York, NY",
+      totalSKUs: 342,
+      totalQuantity: 15420,
+      totalValue: "$1,245,600",
+      capacity: "85%",
+      status: "active",
+      manager: "John Smith"
+    },
+    {
+      warehouseName: "Warehouse B",
+      location: "Los Angeles, CA",
+      totalSKUs: 298,
+      totalQuantity: 12850,
+      totalValue: "$987,400",
+      capacity: "72%",
+      status: "active",
+      manager: "Sarah Johnson"
+    },
+    {
+      warehouseName: "Warehouse C",
+      location: "Chicago, IL",
+      totalSKUs: 425,
+      totalQuantity: 18900,
+      totalValue: "$1,543,200",
+      capacity: "91%",
+      status: "active",
+      manager: "Michael Chen"
+    },
+    {
+      warehouseName: "Warehouse D",
+      location: "Houston, TX",
+      totalSKUs: 182,
+      totalQuantity: 8320,
+      totalValue: "$654,800",
+      capacity: "58%",
+      status: "active",
+      manager: "Emily Davis"
+    },
+  ];
+
   const mockInventoryData = [
     { 
       sku: "SKU-12345", 
@@ -205,6 +248,22 @@ export default function Dashboard() {
     { month: "Jun", inventoryValue: 2500000, purchaseOrders: 670000, sales: 1020000 },
   ];
 
+  const warehouseColumns: Column<any>[] = [
+    { key: "warehouseName", label: "Warehouse", sortable: true },
+    { key: "location", label: "Location", sortable: true },
+    { key: "totalSKUs", label: "Total SKUs", sortable: true },
+    { key: "totalQuantity", label: "Total Quantity", sortable: true },
+    { key: "totalValue", label: "Total Value", sortable: true },
+    { key: "capacity", label: "Capacity", sortable: true },
+    { 
+      key: "status", 
+      label: "Status", 
+      sortable: true,
+      render: (value: string) => <StatusBadge status={value} />
+    },
+    { key: "manager", label: "Manager", sortable: true },
+  ];
+
   const inventoryColumns: Column<any>[] = [
     { key: "sku", label: "SKU", sortable: true, filterable: true },
     { key: "productName", label: "Product Name", sortable: true },
@@ -306,10 +365,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold" data-testid="text-page-title">SKU Warehouse Management</h1>
-      </div>
-
       <SkuSearchInput value={searchValue} onChange={setSearchValue} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4">
@@ -358,6 +413,14 @@ export default function Dashboard() {
       </div>
 
       <div className="flex gap-2 border-b">
+        <Button
+          variant={selectedMenu === 'warehouse' ? 'default' : 'ghost'}
+          onClick={() => setSelectedMenu('warehouse')}
+          data-testid="menu-warehouse"
+          className="rounded-b-none"
+        >
+          Warehouse Stock
+        </Button>
         <Button
           variant={selectedMenu === 'dashboard' ? 'default' : 'ghost'}
           onClick={() => setSelectedMenu('dashboard')}
@@ -417,6 +480,16 @@ export default function Dashboard() {
       </div>
 
       <div className="min-h-[calc(100vh-420px)]">
+        {selectedMenu === 'warehouse' && (
+          <DataTableWithContext
+            data={mockWarehouseStock}
+            columns={warehouseColumns}
+            onViewDetails={(row) => console.log('View warehouse:', row)}
+            onExportRow={(row, format) => console.log(`Exporting ${row.warehouseName} to ${format}`)}
+            onOpenWebPage={(row) => window.open(`https://example.com/warehouse/${row.warehouseName}`, '_blank')}
+          />
+        )}
+
         {selectedMenu === 'dashboard' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <InventoryChart data={inventoryChartData} />
