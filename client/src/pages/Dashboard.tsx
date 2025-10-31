@@ -305,26 +305,26 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 overflow-y-auto p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold" data-testid="text-page-title">SKU Warehouse Management</h1>
+        <h1 className="text-2xl font-semibold" data-testid="text-page-title">SKU Warehouse Management</h1>
       </div>
 
       <SkuSearchInput value={searchValue} onChange={setSearchValue} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-6">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <MetricCard
             label="Total SKUs"
             value="1,247"
             icon={Package}
-            trend={{ value: "12% vs last month", isPositive: true }}
+            trend={{ value: "12%", isPositive: true }}
           />
           <MetricCard
             label="Total Value"
             value="$2.5M"
             icon={DollarSign}
-            trend={{ value: "8% vs last month", isPositive: true }}
+            trend={{ value: "8%", isPositive: true }}
           />
           <MetricCard
             label="Open Orders"
@@ -332,24 +332,24 @@ export default function Dashboard() {
             icon={TrendingUp}
           />
           <MetricCard
-            label="Low Stock Items"
+            label="Low Stock"
             value="23"
             icon={AlertTriangle}
-            trend={{ value: "5% vs last week", isPositive: false }}
+            trend={{ value: "5%", isPositive: false }}
           />
         </div>
 
-        <Card className="p-6">
-          <h3 className="text-sm font-medium uppercase text-muted-foreground mb-4">Alternative SKUs</h3>
-          <div className="space-y-2 max-h-[280px] overflow-y-auto">
+        <Card className="p-4">
+          <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3">Alternative SKUs</h3>
+          <div className="space-y-2 max-h-[140px] overflow-y-auto">
             {mockAlternativeSkus.map((alt, idx) => (
-              <div key={idx} className="p-3 border rounded-md hover-elevate">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <p className="font-mono font-semibold text-sm">{alt.alternativeSku}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{alt.description}</p>
+              <div key={idx} className="p-2 border rounded-md hover-elevate text-xs">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-mono font-semibold truncate">{alt.alternativeSku}</p>
+                    <p className="text-muted-foreground truncate">{alt.description}</p>
                   </div>
-                  <p className="font-mono text-xs">×{alt.conversionRatio}</p>
+                  <p className="font-mono text-xs whitespace-nowrap">×{alt.conversionRatio}</p>
                 </div>
               </div>
             ))}
@@ -416,7 +416,7 @@ export default function Dashboard() {
         </Button>
       </div>
 
-      <div>
+      <div className="min-h-[calc(100vh-420px)]">
         {selectedMenu === 'dashboard' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <InventoryChart data={inventoryChartData} />
