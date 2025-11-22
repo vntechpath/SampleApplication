@@ -6,6 +6,7 @@ import { DataTableWithContext, Column } from "@/components/DataTableWithContext"
 import { InventoryChart } from "@/components/InventoryChart";
 import { CostAnalysisChart } from "@/components/CostAnalysisChart";
 import { SkuDetailModal } from "@/components/SkuDetailModal";
+import { DetailsModal } from "@/components/DetailsModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,12 @@ export default function Dashboard() {
   const [searchValue, setSearchValue] = useState("");
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>('warehouse');
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSkuModalOpen, setIsSkuModalOpen] = useState(false);
+  const [detailsModal, setDetailsModal] = useState<{ isOpen: boolean; title: string; data: any }>({
+    isOpen: false,
+    title: '',
+    data: {}
+  });
 
   // todo: remove mock functionality
   const mockWarehouseStock = [
@@ -274,13 +280,6 @@ export default function Dashboard() {
     { key: "totalValue", label: "Total Value", sortable: true, render: (value) => `$${value}` },
   ];
 
-  const alternativeSkuColumns: Column<any>[] = [
-    { key: "primarySku", label: "Primary SKU", sortable: true },
-    { key: "alternativeSku", label: "Alternative SKU", sortable: true },
-    { key: "description", label: "Description", sortable: true },
-    { key: "conversionRatio", label: "Conversion Ratio", sortable: true },
-  ];
-
   const orderColumns: Column<any>[] = [
     { key: "orderNumber", label: "Order #", sortable: true },
     { key: "sku", label: "SKU", sortable: true },
@@ -347,9 +346,17 @@ export default function Dashboard() {
     item.category.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  const handleViewDetails = (row: any) => {
+  const handleViewDetails = (row: any, title: string) => {
+    setDetailsModal({
+      isOpen: true,
+      title,
+      data: row
+    });
+  };
+
+  const handleInventoryDetails = (row: any) => {
     setSelectedSku(row.sku);
-    setIsModalOpen(true);
+    setIsSkuModalOpen(true);
   };
 
   const getSkuData = (sku: string) => {
@@ -484,7 +491,7 @@ export default function Dashboard() {
           <DataTableWithContext
             data={mockWarehouseStock}
             columns={warehouseColumns}
-            onViewDetails={(row) => console.log('View warehouse:', row)}
+            onViewDetails={(row) => handleViewDetails(row, `Warehouse Details: ${row.warehouseName}`)}
             onExportRow={(row, format) => console.log(`Exporting ${row.warehouseName} to ${format}`)}
             onOpenWebPage={(row) => window.open(`https://example.com/warehouse/${row.warehouseName}`, '_blank')}
           />
@@ -501,7 +508,7 @@ export default function Dashboard() {
           <DataTableWithContext
             data={filteredInventory}
             columns={inventoryColumns}
-            onViewDetails={handleViewDetails}
+            onViewDetails={handleInventoryDetails}
             onExportRow={(row, format) => console.log(`Exporting ${row.sku} to ${format}`)}
             onOpenWebPage={(row) => window.open(`https://example.com/sku/${row.sku}`, '_blank')}
           />
@@ -511,7 +518,7 @@ export default function Dashboard() {
           <DataTableWithContext
             data={mockOpenOrders}
             columns={orderColumns}
-            onViewDetails={(row) => console.log('View order:', row)}
+            onViewDetails={(row) => handleViewDetails(row, `Order Details: ${row.orderNumber}`)}
             onExportRow={(row, format) => console.log(`Exporting ${row.orderNumber} to ${format}`)}
             onOpenWebPage={(row) => window.open(`https://example.com/order/${row.orderNumber}`, '_blank')}
           />
@@ -521,7 +528,7 @@ export default function Dashboard() {
           <DataTableWithContext
             data={mockPurchaseOrders}
             columns={poColumns}
-            onViewDetails={(row) => console.log('View PO:', row)}
+            onViewDetails={(row) => handleViewDetails(row, `Purchase Order Details: ${row.poNumber}`)}
             onExportRow={(row, format) => console.log(`Exporting ${row.poNumber} to ${format}`)}
             onOpenWebPage={(row) => window.open(`https://example.com/po/${row.poNumber}`, '_blank')}
           />
@@ -531,7 +538,7 @@ export default function Dashboard() {
           <DataTableWithContext
             data={mockLeads}
             columns={leadColumns}
-            onViewDetails={(row) => console.log('View lead:', row)}
+            onViewDetails={(row) => handleViewDetails(row, `Lead Details: ${row.leadNumber}`)}
             onExportRow={(row, format) => console.log(`Exporting ${row.leadNumber} to ${format}`)}
             onOpenWebPage={(row) => window.open(`https://example.com/lead/${row.leadNumber}`, '_blank')}
           />
@@ -541,7 +548,7 @@ export default function Dashboard() {
           <DataTableWithContext
             data={mockOpportunities}
             columns={opportunityColumns}
-            onViewDetails={(row) => console.log('View opportunity:', row)}
+            onViewDetails={(row) => handleViewDetails(row, `Opportunity Details: ${row.opportunityNumber}`)}
             onExportRow={(row, format) => console.log(`Exporting ${row.opportunityNumber} to ${format}`)}
             onOpenWebPage={(row) => window.open(`https://example.com/opportunity/${row.opportunityNumber}`, '_blank')}
           />
@@ -557,12 +564,19 @@ export default function Dashboard() {
 
       {selectedSku && (
         <SkuDetailModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          isOpen={isSkuModalOpen}
+          onClose={() => setIsSkuModalOpen(false)}
           sku={selectedSku}
           data={getSkuData(selectedSku)}
         />
       )}
+
+      <DetailsModal
+        isOpen={detailsModal.isOpen}
+        onClose={() => setDetailsModal({ isOpen: false, title: '', data: {} })}
+        title={detailsModal.title}
+        data={detailsModal.data}
+      />
     </div>
   );
 }
