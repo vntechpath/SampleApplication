@@ -269,6 +269,15 @@ export default function Dashboard() {
     };
   };
 
+  // Calculate metrics from search results
+  const totalSkusCount = searchResults.length;
+  const totalValueAmount = searchResults.reduce((sum, item) => {
+    const value = parseFloat(item.totalValue.replace(/,/g, ''));
+    return sum + value;
+  }, 0);
+  const openOrdersCount = mockOpenOrders.length;
+  const lowStockCount = searchResults.filter(item => item.quantityOnHand < 100).length;
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
       <SkuSearchInput 
@@ -284,24 +293,24 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-3">
               <MetricCard
                 label="Total SKUs"
-                value="1,247"
+                value={totalSkusCount.toString()}
                 icon={Package}
                 trend={{ value: "12%", isPositive: true }}
               />
               <MetricCard
                 label="Total Value"
-                value="$2.5M"
+                value={`$${(totalValueAmount / 1000000).toFixed(1)}M`}
                 icon={DollarSign}
                 trend={{ value: "8%", isPositive: true }}
               />
               <MetricCard
                 label="Open Orders"
-                value="342"
+                value={openOrdersCount.toString()}
                 icon={TrendingUp}
               />
               <MetricCard
                 label="Low Stock"
-                value="23"
+                value={lowStockCount.toString()}
                 icon={AlertTriangle}
                 trend={{ value: "5%", isPositive: false }}
               />
