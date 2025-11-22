@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Package, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { SkuSearchInput } from "@/components/SkuSearchInput";
 import { MetricCard } from "@/components/MetricCard";
@@ -10,6 +10,11 @@ import { DetailsModal } from "@/components/DetailsModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { warehouseService } from "@/services/warehouseService";
+import { inventoryService } from "@/services/inventoryService";
+import { ordersService } from "@/services/ordersService";
+import { leadsService } from "@/services/leadsService";
+import { analyticsService } from "@/services/analyticsService";
 
 type MenuOption = 'warehouse' | 'dashboard' | 'inventory' | 'orders' | 'po' | 'leads' | 'opportunities' | 'analytics';
 
@@ -24,235 +29,46 @@ export default function Dashboard() {
     data: {}
   });
 
-  // todo: remove mock functionality
-  const mockWarehouseStock = [
-    {
-      warehouseName: "Warehouse A",
-      location: "New York, NY",
-      totalSKUs: 342,
-      totalQuantity: 15420,
-      totalValue: "$1,245,600",
-      capacity: "85%",
-      status: "active",
-      manager: "John Smith"
-    },
-    {
-      warehouseName: "Warehouse B",
-      location: "Los Angeles, CA",
-      totalSKUs: 298,
-      totalQuantity: 12850,
-      totalValue: "$987,400",
-      capacity: "72%",
-      status: "active",
-      manager: "Sarah Johnson"
-    },
-    {
-      warehouseName: "Warehouse C",
-      location: "Chicago, IL",
-      totalSKUs: 425,
-      totalQuantity: 18900,
-      totalValue: "$1,543,200",
-      capacity: "91%",
-      status: "active",
-      manager: "Michael Chen"
-    },
-    {
-      warehouseName: "Warehouse D",
-      location: "Houston, TX",
-      totalSKUs: 182,
-      totalQuantity: 8320,
-      totalValue: "$654,800",
-      capacity: "58%",
-      status: "active",
-      manager: "Emily Davis"
-    },
-  ];
+  // Service data
+  const [mockWarehouseStock, setMockWarehouseStock] = useState<any[]>([]);
+  const [mockInventoryData, setMockInventoryData] = useState<any[]>([]);
+  const [mockAlternativeSkus, setMockAlternativeSkus] = useState<any[]>([]);
+  const [mockOpenOrders, setMockOpenOrders] = useState<any[]>([]);
+  const [mockPurchaseOrders, setMockPurchaseOrders] = useState<any[]>([]);
+  const [mockLeads, setMockLeads] = useState<any[]>([]);
+  const [mockOpportunities, setMockOpportunities] = useState<any[]>([]);
+  const [inventoryChartData, setInventoryChartData] = useState<any[]>([]);
+  const [costAnalysisData, setCostAnalysisData] = useState<any[]>([]);
 
-  const mockInventoryData = [
-    { 
-      sku: "SKU-12345", 
-      productName: "Premium Widget Pro", 
-      category: "Electronics",
-      quantityOnHand: 450,
-      quantityAvailable: 330,
-      unitCost: "45.99",
-      totalValue: "20,695.50",
-      supplier: "TechCorp Inc.",
-      location: "Warehouse A-12"
-    },
-    { 
-      sku: "SKU-23456", 
-      productName: "Standard Gadget", 
-      category: "Hardware",
-      quantityOnHand: 280,
-      quantityAvailable: 210,
-      unitCost: "32.50",
-      totalValue: "9,100.00",
-      supplier: "HardwareCo",
-      location: "Warehouse B-5"
-    },
-    { 
-      sku: "SKU-34567", 
-      productName: "Deluxe Component", 
-      category: "Electronics",
-      quantityOnHand: 156,
-      quantityAvailable: 98,
-      unitCost: "78.25",
-      totalValue: "12,207.00",
-      supplier: "ComponentsPlus",
-      location: "Warehouse A-8"
-    },
-    { 
-      sku: "SKU-45678", 
-      productName: "Basic Tool", 
-      category: "Tools",
-      quantityOnHand: 620,
-      quantityAvailable: 580,
-      unitCost: "15.99",
-      totalValue: "9,913.80",
-      supplier: "ToolMasters",
-      location: "Warehouse C-3"
-    },
-    { 
-      sku: "SKU-56789", 
-      productName: "Pro Accessory", 
-      category: "Accessories",
-      quantityOnHand: 89,
-      quantityAvailable: 45,
-      unitCost: "22.75",
-      totalValue: "2,024.75",
-      supplier: "AccessoryCorp",
-      location: "Warehouse B-12"
-    },
-  ];
+  // Load data from services
+  useEffect(() => {
+    const loadData = async () => {
+      const [warehouse, inventory, alternatives, orders, pos, leads, opportunities, invChart, costChart] = await Promise.all([
+        warehouseService.getWarehouseStock(),
+        inventoryService.getInventoryItems(),
+        inventoryService.getAlternativeSkus(),
+        ordersService.getOpenOrders(),
+        ordersService.getPurchaseOrders(),
+        leadsService.getLeads(),
+        leadsService.getOpportunities(),
+        analyticsService.getInventoryChartData(),
+        analyticsService.getCostAnalysisData()
+      ]);
 
-  const mockAlternativeSkus = [
-    { 
-      primarySku: "SKU-12345", 
-      alternativeSku: "SKU-12345-ALT", 
-      description: "Standard variant of Premium Widget Pro",
-      conversionRatio: "1.0"
-    },
-    { 
-      primarySku: "SKU-12345", 
-      alternativeSku: "SKU-12346", 
-      description: "Deluxe variant with enhanced features",
-      conversionRatio: "0.8"
-    },
-    { 
-      primarySku: "SKU-23456", 
-      alternativeSku: "SKU-23457", 
-      description: "Budget version of Standard Gadget",
-      conversionRatio: "1.2"
-    },
-  ];
+      setMockWarehouseStock(warehouse);
+      setMockInventoryData(inventory);
+      setMockAlternativeSkus(alternatives);
+      setMockOpenOrders(orders);
+      setMockPurchaseOrders(pos);
+      setMockLeads(leads);
+      setMockOpportunities(opportunities);
+      setInventoryChartData(invChart);
+      setCostAnalysisData(costChart);
+    };
 
-  const mockOpenOrders = [
-    {
-      orderNumber: "ORD-1001",
-      sku: "SKU-12345",
-      customerName: "Acme Corp",
-      quantity: 50,
-      totalAmount: "2,299.50",
-      orderDate: "2025-10-28",
-      status: "pending"
-    },
-    {
-      orderNumber: "ORD-1002",
-      sku: "SKU-23456",
-      customerName: "TechStart Inc",
-      quantity: 120,
-      totalAmount: "3,900.00",
-      orderDate: "2025-10-29",
-      status: "processing"
-    },
-    {
-      orderNumber: "ORD-1003",
-      sku: "SKU-34567",
-      customerName: "Global Widgets",
-      quantity: 35,
-      totalAmount: "2,738.75",
-      orderDate: "2025-10-30",
-      status: "shipped"
-    },
-  ];
+    loadData();
+  }, []);
 
-  const mockPurchaseOrders = [
-    {
-      poNumber: "PO-5001",
-      sku: "SKU-12345",
-      supplier: "TechCorp Inc.",
-      quantity: 200,
-      totalCost: "9,198.00",
-      orderDate: "2025-10-25",
-      status: "ordered"
-    },
-    {
-      poNumber: "PO-5002",
-      sku: "SKU-45678",
-      supplier: "ToolMasters",
-      quantity: 500,
-      totalCost: "7,995.00",
-      orderDate: "2025-10-27",
-      status: "received"
-    },
-  ];
-
-  const mockLeads = [
-    {
-      leadNumber: "LEAD-301",
-      companyName: "Future Tech LLC",
-      contactName: "John Smith",
-      interestedSku: "SKU-12345",
-      estimatedValue: "15,000.00",
-      status: "new"
-    },
-    {
-      leadNumber: "LEAD-302",
-      companyName: "Innovation Labs",
-      contactName: "Sarah Johnson",
-      interestedSku: "SKU-34567",
-      estimatedValue: "28,500.00",
-      status: "contacted"
-    },
-  ];
-
-  const mockOpportunities = [
-    {
-      opportunityNumber: "OPP-401",
-      companyName: "Enterprise Solutions",
-      sku: "SKU-23456",
-      quantity: 300,
-      totalValue: "9,750.00",
-      probability: 75,
-      stage: "negotiation"
-    },
-    {
-      opportunityNumber: "OPP-402",
-      companyName: "MegaCorp Industries",
-      sku: "SKU-12345",
-      quantity: 500,
-      totalValue: "22,995.00",
-      probability: 60,
-      stage: "proposal"
-    },
-  ];
-
-  const inventoryChartData = [
-    { category: "Electronics", onHand: 606, reserved: 276, available: 428 },
-    { category: "Hardware", onHand: 280, reserved: 70, available: 210 },
-    { category: "Tools", onHand: 620, reserved: 40, available: 580 },
-    { category: "Accessories", onHand: 89, reserved: 44, available: 45 },
-  ];
-
-  const costAnalysisData = [
-    { month: "Jan", inventoryValue: 2100000, purchaseOrders: 450000, sales: 680000 },
-    { month: "Feb", inventoryValue: 2250000, purchaseOrders: 520000, sales: 720000 },
-    { month: "Mar", inventoryValue: 2180000, purchaseOrders: 480000, sales: 850000 },
-    { month: "Apr", inventoryValue: 2400000, purchaseOrders: 610000, sales: 920000 },
-    { month: "May", inventoryValue: 2350000, purchaseOrders: 550000, sales: 880000 },
-    { month: "Jun", inventoryValue: 2500000, purchaseOrders: 670000, sales: 1020000 },
-  ];
 
   const warehouseColumns: Column<any>[] = [
     { key: "warehouseName", label: "Warehouse", sortable: true },
