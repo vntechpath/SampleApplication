@@ -321,7 +321,17 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-2 max-h-[140px] overflow-y-auto">
                   {mockAlternativeSkus.map((alt, idx) => (
-                    <div key={idx} className="p-2 border rounded-md hover-elevate text-xs">
+                    <div 
+                      key={idx} 
+                      className="p-2 border rounded-md hover-elevate text-xs cursor-pointer"
+                      onClick={() => {
+                        setSearchValue(alt.alternativeSku);
+                        setTimeout(() => {
+                          handleSkuSearch(alt.alternativeSku);
+                        }, 0);
+                      }}
+                      data-testid={`alt-sku-${idx}`}
+                    >
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-mono font-semibold truncate">{alt.alternativeSku}</p>
