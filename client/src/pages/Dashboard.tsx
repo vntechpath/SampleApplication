@@ -61,7 +61,6 @@ export default function Dashboard() {
     try {
       setIsSearchLoading(true);
       setHasSearched(true);
-      setSelectedMenu('inventory');
       
       // Set all loading states
       setIsLoadingWarehouse(true);
