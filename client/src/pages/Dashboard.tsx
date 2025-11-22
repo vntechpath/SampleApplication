@@ -280,112 +280,59 @@ export default function Dashboard() {
 
       {hasSearched && (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Total SKUs Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard
+                label="Total SKUs"
+                value="1,247"
+                icon={Package}
+                trend={{ value: "12%", isPositive: true }}
+              />
+              <MetricCard
+                label="Total Value"
+                value="$2.5M"
+                icon={DollarSign}
+                trend={{ value: "8%", isPositive: true }}
+              />
+              <MetricCard
+                label="Open Orders"
+                value="342"
+                icon={TrendingUp}
+              />
+              <MetricCard
+                label="Low Stock"
+                value="23"
+                icon={AlertTriangle}
+                trend={{ value: "5%", isPositive: false }}
+              />
+            </div>
+
             <Card className="p-4">
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3 flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Total SKUs
-              </h3>
-              <div className="max-h-[200px] overflow-y-auto">
-                <div className="space-y-1">
-                  {mockInventoryData.length > 0 ? (
-                    mockInventoryData.map((item, idx) => (
-                      <div key={idx} className="p-2 border rounded-md hover-elevate text-xs bg-background">
-                        <div className="flex justify-between items-center gap-2">
-                          <p className="font-mono font-semibold truncate">{item.sku}</p>
-                          <p className="text-muted-foreground whitespace-nowrap">{item.productName}</p>
+              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3">Alternative SKUs</h3>
+              {isLoadingAlternatives ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin">
+                      <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">Loading...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[140px] overflow-y-auto">
+                  {mockAlternativeSkus.map((alt, idx) => (
+                    <div key={idx} className="p-2 border rounded-md hover-elevate text-xs">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-mono font-semibold truncate">{alt.alternativeSku}</p>
+                          <p className="text-muted-foreground truncate">{alt.description}</p>
                         </div>
+                        <p className="font-mono text-xs whitespace-nowrap">×{alt.conversionRatio}</p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-xs text-muted-foreground py-4">No data</div>
-                  )}
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </Card>
-
-            {/* Total Value Grid */}
-            <Card className="p-4">
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3 flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Total Value
-              </h3>
-              <div className="max-h-[200px] overflow-y-auto">
-                <div className="space-y-1">
-                  {mockInventoryData.length > 0 ? (
-                    mockInventoryData
-                      .sort((a, b) => {
-                        const valA = parseFloat(a.totalValue.replace(/,/g, ''));
-                        const valB = parseFloat(b.totalValue.replace(/,/g, ''));
-                        return valB - valA;
-                      })
-                      .map((item, idx) => (
-                        <div key={idx} className="p-2 border rounded-md hover-elevate text-xs bg-background">
-                          <div className="flex justify-between items-center gap-2">
-                            <p className="font-mono font-semibold truncate">{item.sku}</p>
-                            <p className="text-green-600 font-semibold whitespace-nowrap">${item.totalValue}</p>
-                          </div>
-                        </div>
-                      ))
-                  ) : (
-                    <div className="text-center text-xs text-muted-foreground py-4">No data</div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Open Orders Grid */}
-            <Card className="p-4">
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Open Orders
-              </h3>
-              <div className="max-h-[200px] overflow-y-auto">
-                <div className="space-y-1">
-                  {mockOpenOrders.length > 0 ? (
-                    mockOpenOrders.map((order, idx) => (
-                      <div key={idx} className="p-2 border rounded-md hover-elevate text-xs bg-background">
-                        <div className="flex justify-between items-center gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-mono font-semibold truncate">{order.orderNumber}</p>
-                            <p className="text-muted-foreground truncate">{order.customerName}</p>
-                          </div>
-                          <p className="text-blue-600 font-semibold whitespace-nowrap">×{order.quantity}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-xs text-muted-foreground py-4">No data</div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Low Stock Grid */}
-            <Card className="p-4">
-              <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Low Stock
-              </h3>
-              <div className="max-h-[200px] overflow-y-auto">
-                <div className="space-y-1">
-                  {mockInventoryData.length > 0 ? (
-                    mockInventoryData
-                      .filter(item => item.quantityOnHand < 100)
-                      .map((item, idx) => (
-                        <div key={idx} className="p-2 border rounded-md hover-elevate text-xs bg-background">
-                          <div className="flex justify-between items-center gap-2">
-                            <p className="font-mono font-semibold truncate">{item.sku}</p>
-                            <p className="text-red-600 font-semibold whitespace-nowrap">×{item.quantityOnHand}</p>
-                          </div>
-                        </div>
-                      ))
-                  ) : (
-                    <div className="text-center text-xs text-muted-foreground py-4">No low stock items</div>
-                  )}
-                </div>
-              </div>
+              )}
             </Card>
           </div>
 
