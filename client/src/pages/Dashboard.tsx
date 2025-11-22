@@ -34,13 +34,13 @@ export default function Dashboard() {
 
   // Individual loading states for each grid
   const [isLoadingWarehouse, setIsLoadingWarehouse] = useState(true);
-  const [isLoadingInventory, setIsLoadingInventory] = useState(false);
-  const [isLoadingAlternatives, setIsLoadingAlternatives] = useState(false);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
-  const [isLoadingPOs, setIsLoadingPOs] = useState(false);
-  const [isLoadingLeads, setIsLoadingLeads] = useState(false);
-  const [isLoadingOpportunities, setIsLoadingOpportunities] = useState(false);
-  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [isLoadingInventory, setIsLoadingInventory] = useState(true);
+  const [isLoadingAlternatives, setIsLoadingAlternatives] = useState(true);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [isLoadingPOs, setIsLoadingPOs] = useState(true);
+  const [isLoadingLeads, setIsLoadingLeads] = useState(true);
+  const [isLoadingOpportunities, setIsLoadingOpportunities] = useState(true);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true);
 
   // Service data states
   const [mockWarehouseStock, setMockWarehouseStock] = useState<any[]>([]);
@@ -69,9 +69,8 @@ export default function Dashboard() {
   // Load inventory data (incremental delay 1000ms)
   useEffect(() => {
     const loadInventoryData = async () => {
-      await delay(1000);
       try {
-        setIsLoadingInventory(true);
+        await delay(1000);
         const data = await inventoryService.getInventoryItems();
         setMockInventoryData(data);
       } finally {
@@ -84,9 +83,8 @@ export default function Dashboard() {
   // Load alternative skus (incremental delay 2000ms)
   useEffect(() => {
     const loadAlternativeData = async () => {
-      await delay(2000);
       try {
-        setIsLoadingAlternatives(true);
+        await delay(2000);
         const data = await inventoryService.getAlternativeSkus();
         setMockAlternativeSkus(data);
       } finally {
@@ -99,9 +97,8 @@ export default function Dashboard() {
   // Load open orders (incremental delay 3000ms)
   useEffect(() => {
     const loadOrdersData = async () => {
-      await delay(3000);
       try {
-        setIsLoadingOrders(true);
+        await delay(3000);
         const data = await ordersService.getOpenOrders();
         setMockOpenOrders(data);
       } finally {
@@ -114,9 +111,8 @@ export default function Dashboard() {
   // Load purchase orders (incremental delay 4000ms)
   useEffect(() => {
     const loadPOData = async () => {
-      await delay(4000);
       try {
-        setIsLoadingPOs(true);
+        await delay(4000);
         const data = await ordersService.getPurchaseOrders();
         setMockPurchaseOrders(data);
       } finally {
@@ -129,9 +125,8 @@ export default function Dashboard() {
   // Load leads (incremental delay 5000ms)
   useEffect(() => {
     const loadLeadsData = async () => {
-      await delay(5000);
       try {
-        setIsLoadingLeads(true);
+        await delay(5000);
         const data = await leadsService.getLeads();
         setMockLeads(data);
       } finally {
@@ -144,9 +139,8 @@ export default function Dashboard() {
   // Load opportunities (incremental delay 6000ms)
   useEffect(() => {
     const loadOpportunitiesData = async () => {
-      await delay(6000);
       try {
-        setIsLoadingOpportunities(true);
+        await delay(6000);
         const data = await leadsService.getOpportunities();
         setMockOpportunities(data);
       } finally {
@@ -159,9 +153,8 @@ export default function Dashboard() {
   // Load analytics (incremental delay 7000ms)
   useEffect(() => {
     const loadAnalyticsData = async () => {
-      await delay(7000);
       try {
-        setIsLoadingAnalytics(true);
+        await delay(7000);
         const [invChart, costChart] = await Promise.all([
           analyticsService.getInventoryChartData(),
           analyticsService.getCostAnalysisData()
@@ -326,7 +319,12 @@ export default function Dashboard() {
           <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3">Alternative SKUs</h3>
           {isLoadingAlternatives ? (
             <div className="flex items-center justify-center h-32">
-              <DataLoader message="Loading..." />
+              <div className="text-center">
+                <div className="inline-block animate-spin">
+                  <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Loading...</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-2 max-h-[140px] overflow-y-auto">
