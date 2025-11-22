@@ -17,6 +17,7 @@ import { ordersService } from "@/services/ordersService";
 import { leadsService } from "@/services/leadsService";
 import { analyticsService } from "@/services/analyticsService";
 import { searchService } from "@/services/searchService";
+import { detailsService } from "@/services/detailsService";
 
 type MenuOption = 'warehouse' | 'dashboard' | 'inventory' | 'orders' | 'po' | 'leads' | 'opportunities' | 'analytics';
 
@@ -30,10 +31,11 @@ export default function Dashboard() {
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>('warehouse');
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [isSkuModalOpen, setIsSkuModalOpen] = useState(false);
-  const [detailsModal, setDetailsModal] = useState<{ isOpen: boolean; title: string; data: any }>({
+  const [detailsModal, setDetailsModal] = useState<{ isOpen: boolean; title: string; data: any; viewType?: 'default' | 'warehouse-table' | 'inventory-grid' }>({
     isOpen: false,
     title: '',
-    data: {}
+    data: {},
+    viewType: 'default'
   });
 
   // Individual loading states for each grid
@@ -245,12 +247,36 @@ export default function Dashboard() {
     },
   ];
 
-  const handleViewDetails = (row: any, title: string) => {
-    setDetailsModal({
-      isOpen: true,
-      title,
-      data: row
-    });
+  const handleViewDetails = async (row: any, title: string, type: 'warehouse' | 'inventory' = 'warehouse') => {
+    try {
+      let data;
+      let viewType: 'default' | 'warehouse-table' | 'inventory-grid' = 'default';
+
+      if (type === 'warehouse') {
+        data = await detailsService.getWarehouseDetails(row.warehouseName);
+        viewType = 'warehouse-table';
+      } else if (type === 'inventory') {
+        data = await detailsService.getInventoryDetails(row.sku);
+        viewType = 'inventory-grid';
+      } else {
+        data = row;
+      }
+
+      setDetailsModal({
+        isOpen: true,
+        title,
+        data,
+        viewType
+      });
+    } catch (error) {
+      console.error('Error loading details:', error);
+      setDetailsModal({
+        isOpen: true,
+        title,
+        data: row,
+        viewType: 'default'
+      });
+    }
   };
 
   const handleInventoryDetails = (row: any) => {
@@ -430,7 +456,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={mockWarehouseStock}
                   columns={warehouseColumns}
-                  onViewDetails={(row) => handleViewDetails(row, `Warehouse Details: ${row.warehouseName}`)}
+                  onViewDetails={(row) => handleViewDetails(row, `Warehouse Details: ${row.warehouseName}`, 'warehouse')}
                   onExportRow={(row, format) => console.log(`Exporting ${row.warehouseName} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/warehouse/${row.warehouseName}`, '_blank')}
                 />
@@ -455,7 +481,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={searchResults}
                   columns={inventoryColumns}
-                  onViewDetails={handleInventoryDetails}
+                  onViewDetails={(row) => handleViewDetails(row, `Inventory Details: ${row.sku}`, 'inventory')}
                   onExportRow={(row, format) => console.log(`Exporting ${row.sku} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/sku/${row.sku}`, '_blank')}
                 />
@@ -553,9 +579,10 @@ export default function Dashboard() {
 
       <DetailsModal
         isOpen={detailsModal.isOpen}
-        onClose={() => setDetailsModal({ isOpen: false, title: '', data: {} })}
+        onClose={() => setDetailsModal({ isOpen: false, title: '', data: {}, viewType: 'default' })}
         title={detailsModal.title}
         data={detailsModal.data}
+        viewType={detailsModal.viewType}
       />
     </div>
   );
