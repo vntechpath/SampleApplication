@@ -19,8 +19,9 @@ export function SkuSearchInput({
 }: SkuSearchInputProps) {
   const { toast } = useToast();
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       if (!value || value.trim().length === 0) {
         toast({
           title: "Empty Search",
@@ -42,7 +43,7 @@ export function SkuSearchInput({
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className="h-12 pl-12 pr-4 text-base"
         data-testid="input-sku-search"
