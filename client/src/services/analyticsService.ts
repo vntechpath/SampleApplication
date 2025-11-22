@@ -15,12 +15,9 @@ export interface CostAnalysisData {
   sales: number;
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export const analyticsService = {
   async getInventoryChartData(): Promise<InventoryChartData[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/analytics/inventory`).then(r => r.json())
-    await delay(10000); // 10 second delay for demo
     return [
       { category: "Electronics", onHand: 606, reserved: 276, available: 428 },
       { category: "Hardware", onHand: 280, reserved: 70, available: 210 },
@@ -31,7 +28,6 @@ export const analyticsService = {
 
   async getCostAnalysisData(): Promise<CostAnalysisData[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/analytics/cost`).then(r => r.json())
-    await delay(10000); // 10 second delay for demo
     return [
       { month: "Jan", inventoryValue: 2100000, purchaseOrders: 450000, sales: 680000 },
       { month: "Feb", inventoryValue: 2250000, purchaseOrders: 520000, sales: 720000 },

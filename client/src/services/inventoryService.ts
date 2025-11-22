@@ -20,12 +20,9 @@ export interface AlternativeSku {
   conversionRatio: string;
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export const inventoryService = {
   async getInventoryItems(): Promise<InventoryItem[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/inventory`).then(r => r.json())
-    await delay(10000); // 10 second delay for demo
     return [
       {
         sku: "SKU-12345",
@@ -87,7 +84,6 @@ export const inventoryService = {
 
   async getAlternativeSkus(): Promise<AlternativeSku[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/inventory/alternatives`).then(r => r.json())
-    await delay(10000); // 10 second delay for demo
     return [
       {
         primarySku: "SKU-12345",

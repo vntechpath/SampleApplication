@@ -19,6 +19,8 @@ import { analyticsService } from "@/services/analyticsService";
 
 type MenuOption = 'warehouse' | 'dashboard' | 'inventory' | 'orders' | 'po' | 'leads' | 'opportunities' | 'analytics';
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export default function Dashboard() {
   const [searchValue, setSearchValue] = useState("");
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>('warehouse');
@@ -30,7 +32,17 @@ export default function Dashboard() {
     data: {}
   });
 
-  // Service data
+  // Individual loading states for each grid
+  const [isLoadingWarehouse, setIsLoadingWarehouse] = useState(true);
+  const [isLoadingInventory, setIsLoadingInventory] = useState(false);
+  const [isLoadingAlternatives, setIsLoadingAlternatives] = useState(false);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isLoadingPOs, setIsLoadingPOs] = useState(false);
+  const [isLoadingLeads, setIsLoadingLeads] = useState(false);
+  const [isLoadingOpportunities, setIsLoadingOpportunities] = useState(false);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+
+  // Service data states
   const [mockWarehouseStock, setMockWarehouseStock] = useState<any[]>([]);
   const [mockInventoryData, setMockInventoryData] = useState<any[]>([]);
   const [mockAlternativeSkus, setMockAlternativeSkus] = useState<any[]>([]);
@@ -40,42 +52,128 @@ export default function Dashboard() {
   const [mockOpportunities, setMockOpportunities] = useState<any[]>([]);
   const [inventoryChartData, setInventoryChartData] = useState<any[]>([]);
   const [costAnalysisData, setCostAnalysisData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Load data from services
+  // Load warehouse data (0ms delay)
   useEffect(() => {
-    const loadData = async () => {
+    const loadWarehouseData = async () => {
       try {
-        setIsLoading(true);
-        const [warehouse, inventory, alternatives, orders, pos, leads, opportunities, invChart, costChart] = await Promise.all([
-          warehouseService.getWarehouseStock(),
-          inventoryService.getInventoryItems(),
-          inventoryService.getAlternativeSkus(),
-          ordersService.getOpenOrders(),
-          ordersService.getPurchaseOrders(),
-          leadsService.getLeads(),
-          leadsService.getOpportunities(),
+        const data = await warehouseService.getWarehouseStock();
+        setMockWarehouseStock(data);
+      } finally {
+        setIsLoadingWarehouse(false);
+      }
+    };
+    loadWarehouseData();
+  }, []);
+
+  // Load inventory data (incremental delay 1000ms)
+  useEffect(() => {
+    const loadInventoryData = async () => {
+      await delay(1000);
+      try {
+        setIsLoadingInventory(true);
+        const data = await inventoryService.getInventoryItems();
+        setMockInventoryData(data);
+      } finally {
+        setIsLoadingInventory(false);
+      }
+    };
+    loadInventoryData();
+  }, []);
+
+  // Load alternative skus (incremental delay 2000ms)
+  useEffect(() => {
+    const loadAlternativeData = async () => {
+      await delay(2000);
+      try {
+        setIsLoadingAlternatives(true);
+        const data = await inventoryService.getAlternativeSkus();
+        setMockAlternativeSkus(data);
+      } finally {
+        setIsLoadingAlternatives(false);
+      }
+    };
+    loadAlternativeData();
+  }, []);
+
+  // Load open orders (incremental delay 3000ms)
+  useEffect(() => {
+    const loadOrdersData = async () => {
+      await delay(3000);
+      try {
+        setIsLoadingOrders(true);
+        const data = await ordersService.getOpenOrders();
+        setMockOpenOrders(data);
+      } finally {
+        setIsLoadingOrders(false);
+      }
+    };
+    loadOrdersData();
+  }, []);
+
+  // Load purchase orders (incremental delay 4000ms)
+  useEffect(() => {
+    const loadPOData = async () => {
+      await delay(4000);
+      try {
+        setIsLoadingPOs(true);
+        const data = await ordersService.getPurchaseOrders();
+        setMockPurchaseOrders(data);
+      } finally {
+        setIsLoadingPOs(false);
+      }
+    };
+    loadPOData();
+  }, []);
+
+  // Load leads (incremental delay 5000ms)
+  useEffect(() => {
+    const loadLeadsData = async () => {
+      await delay(5000);
+      try {
+        setIsLoadingLeads(true);
+        const data = await leadsService.getLeads();
+        setMockLeads(data);
+      } finally {
+        setIsLoadingLeads(false);
+      }
+    };
+    loadLeadsData();
+  }, []);
+
+  // Load opportunities (incremental delay 6000ms)
+  useEffect(() => {
+    const loadOpportunitiesData = async () => {
+      await delay(6000);
+      try {
+        setIsLoadingOpportunities(true);
+        const data = await leadsService.getOpportunities();
+        setMockOpportunities(data);
+      } finally {
+        setIsLoadingOpportunities(false);
+      }
+    };
+    loadOpportunitiesData();
+  }, []);
+
+  // Load analytics (incremental delay 7000ms)
+  useEffect(() => {
+    const loadAnalyticsData = async () => {
+      await delay(7000);
+      try {
+        setIsLoadingAnalytics(true);
+        const [invChart, costChart] = await Promise.all([
           analyticsService.getInventoryChartData(),
           analyticsService.getCostAnalysisData()
         ]);
-
-        setMockWarehouseStock(warehouse);
-        setMockInventoryData(inventory);
-        setMockAlternativeSkus(alternatives);
-        setMockOpenOrders(orders);
-        setMockPurchaseOrders(pos);
-        setMockLeads(leads);
-        setMockOpportunities(opportunities);
         setInventoryChartData(invChart);
         setCostAnalysisData(costChart);
       } finally {
-        setIsLoading(false);
+        setIsLoadingAnalytics(false);
       }
     };
-
-    loadData();
+    loadAnalyticsData();
   }, []);
-
 
   const warehouseColumns: Column<any>[] = [
     { key: "warehouseName", label: "Warehouse", sortable: true },
@@ -193,14 +291,6 @@ export default function Dashboard() {
     };
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 overflow-y-auto p-6">
-        <DataLoader message="Loading warehouse data..." />
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
       <SkuSearchInput value={searchValue} onChange={setSearchValue} />
@@ -234,19 +324,25 @@ export default function Dashboard() {
 
         <Card className="p-4">
           <h3 className="text-xs font-medium uppercase text-muted-foreground mb-3">Alternative SKUs</h3>
-          <div className="space-y-2 max-h-[140px] overflow-y-auto">
-            {mockAlternativeSkus.map((alt, idx) => (
-              <div key={idx} className="p-2 border rounded-md hover-elevate text-xs">
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-mono font-semibold truncate">{alt.alternativeSku}</p>
-                    <p className="text-muted-foreground truncate">{alt.description}</p>
+          {isLoadingAlternatives ? (
+            <div className="flex items-center justify-center h-32">
+              <DataLoader message="Loading..." />
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[140px] overflow-y-auto">
+              {mockAlternativeSkus.map((alt, idx) => (
+                <div key={idx} className="p-2 border rounded-md hover-elevate text-xs">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono font-semibold truncate">{alt.alternativeSku}</p>
+                      <p className="text-muted-foreground truncate">{alt.description}</p>
+                    </div>
+                    <p className="font-mono text-xs whitespace-nowrap">×{alt.conversionRatio}</p>
                   </div>
-                  <p className="font-mono text-xs whitespace-nowrap">×{alt.conversionRatio}</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
 
@@ -319,77 +415,109 @@ export default function Dashboard() {
 
       <div className="min-h-[calc(100vh-420px)]">
         {selectedMenu === 'warehouse' && (
-          <DataTableWithContext
-            data={mockWarehouseStock}
-            columns={warehouseColumns}
-            onViewDetails={(row) => handleViewDetails(row, `Warehouse Details: ${row.warehouseName}`)}
-            onExportRow={(row, format) => console.log(`Exporting ${row.warehouseName} to ${format}`)}
-            onOpenWebPage={(row) => window.open(`https://example.com/warehouse/${row.warehouseName}`, '_blank')}
-          />
+          isLoadingWarehouse ? (
+            <DataLoader message="Loading warehouse data..." />
+          ) : (
+            <DataTableWithContext
+              data={mockWarehouseStock}
+              columns={warehouseColumns}
+              onViewDetails={(row) => handleViewDetails(row, `Warehouse Details: ${row.warehouseName}`)}
+              onExportRow={(row, format) => console.log(`Exporting ${row.warehouseName} to ${format}`)}
+              onOpenWebPage={(row) => window.open(`https://example.com/warehouse/${row.warehouseName}`, '_blank')}
+            />
+          )
         )}
 
         {selectedMenu === 'dashboard' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <InventoryChart data={inventoryChartData} />
-            <CostAnalysisChart data={costAnalysisData} />
-          </div>
+          isLoadingAnalytics ? (
+            <DataLoader message="Loading analytics..." />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <InventoryChart data={inventoryChartData} />
+              <CostAnalysisChart data={costAnalysisData} />
+            </div>
+          )
         )}
 
         {selectedMenu === 'inventory' && (
-          <DataTableWithContext
-            data={filteredInventory}
-            columns={inventoryColumns}
-            onViewDetails={handleInventoryDetails}
-            onExportRow={(row, format) => console.log(`Exporting ${row.sku} to ${format}`)}
-            onOpenWebPage={(row) => window.open(`https://example.com/sku/${row.sku}`, '_blank')}
-          />
+          isLoadingInventory ? (
+            <DataLoader message="Loading inventory..." />
+          ) : (
+            <DataTableWithContext
+              data={filteredInventory}
+              columns={inventoryColumns}
+              onViewDetails={handleInventoryDetails}
+              onExportRow={(row, format) => console.log(`Exporting ${row.sku} to ${format}`)}
+              onOpenWebPage={(row) => window.open(`https://example.com/sku/${row.sku}`, '_blank')}
+            />
+          )
         )}
 
         {selectedMenu === 'orders' && (
-          <DataTableWithContext
-            data={mockOpenOrders}
-            columns={orderColumns}
-            onViewDetails={(row) => handleViewDetails(row, `Order Details: ${row.orderNumber}`)}
-            onExportRow={(row, format) => console.log(`Exporting ${row.orderNumber} to ${format}`)}
-            onOpenWebPage={(row) => window.open(`https://example.com/order/${row.orderNumber}`, '_blank')}
-          />
+          isLoadingOrders ? (
+            <DataLoader message="Loading open orders..." />
+          ) : (
+            <DataTableWithContext
+              data={mockOpenOrders}
+              columns={orderColumns}
+              onViewDetails={(row) => handleViewDetails(row, `Order Details: ${row.orderNumber}`)}
+              onExportRow={(row, format) => console.log(`Exporting ${row.orderNumber} to ${format}`)}
+              onOpenWebPage={(row) => window.open(`https://example.com/order/${row.orderNumber}`, '_blank')}
+            />
+          )
         )}
 
         {selectedMenu === 'po' && (
-          <DataTableWithContext
-            data={mockPurchaseOrders}
-            columns={poColumns}
-            onViewDetails={(row) => handleViewDetails(row, `Purchase Order Details: ${row.poNumber}`)}
-            onExportRow={(row, format) => console.log(`Exporting ${row.poNumber} to ${format}`)}
-            onOpenWebPage={(row) => window.open(`https://example.com/po/${row.poNumber}`, '_blank')}
-          />
+          isLoadingPOs ? (
+            <DataLoader message="Loading purchase orders..." />
+          ) : (
+            <DataTableWithContext
+              data={mockPurchaseOrders}
+              columns={poColumns}
+              onViewDetails={(row) => handleViewDetails(row, `Purchase Order Details: ${row.poNumber}`)}
+              onExportRow={(row, format) => console.log(`Exporting ${row.poNumber} to ${format}`)}
+              onOpenWebPage={(row) => window.open(`https://example.com/po/${row.poNumber}`, '_blank')}
+            />
+          )
         )}
 
         {selectedMenu === 'leads' && (
-          <DataTableWithContext
-            data={mockLeads}
-            columns={leadColumns}
-            onViewDetails={(row) => handleViewDetails(row, `Lead Details: ${row.leadNumber}`)}
-            onExportRow={(row, format) => console.log(`Exporting ${row.leadNumber} to ${format}`)}
-            onOpenWebPage={(row) => window.open(`https://example.com/lead/${row.leadNumber}`, '_blank')}
-          />
+          isLoadingLeads ? (
+            <DataLoader message="Loading leads..." />
+          ) : (
+            <DataTableWithContext
+              data={mockLeads}
+              columns={leadColumns}
+              onViewDetails={(row) => handleViewDetails(row, `Lead Details: ${row.leadNumber}`)}
+              onExportRow={(row, format) => console.log(`Exporting ${row.leadNumber} to ${format}`)}
+              onOpenWebPage={(row) => window.open(`https://example.com/lead/${row.leadNumber}`, '_blank')}
+            />
+          )
         )}
 
         {selectedMenu === 'opportunities' && (
-          <DataTableWithContext
-            data={mockOpportunities}
-            columns={opportunityColumns}
-            onViewDetails={(row) => handleViewDetails(row, `Opportunity Details: ${row.opportunityNumber}`)}
-            onExportRow={(row, format) => console.log(`Exporting ${row.opportunityNumber} to ${format}`)}
-            onOpenWebPage={(row) => window.open(`https://example.com/opportunity/${row.opportunityNumber}`, '_blank')}
-          />
+          isLoadingOpportunities ? (
+            <DataLoader message="Loading opportunities..." />
+          ) : (
+            <DataTableWithContext
+              data={mockOpportunities}
+              columns={opportunityColumns}
+              onViewDetails={(row) => handleViewDetails(row, `Opportunity Details: ${row.opportunityNumber}`)}
+              onExportRow={(row, format) => console.log(`Exporting ${row.opportunityNumber} to ${format}`)}
+              onOpenWebPage={(row) => window.open(`https://example.com/opportunity/${row.opportunityNumber}`, '_blank')}
+            />
+          )
         )}
 
         {selectedMenu === 'analytics' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <InventoryChart data={inventoryChartData} />
-            <CostAnalysisChart data={costAnalysisData} />
-          </div>
+          isLoadingAnalytics ? (
+            <DataLoader message="Loading analytics..." />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <InventoryChart data={inventoryChartData} />
+              <CostAnalysisChart data={costAnalysisData} />
+            </div>
+          )
         )}
       </div>
 

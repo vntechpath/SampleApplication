@@ -20,12 +20,9 @@ export interface Opportunity {
   stage: string;
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export const leadsService = {
   async getLeads(): Promise<Lead[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/leads`).then(r => r.json())
-    await delay(10000); // 10 second delay for demo
     return [
       {
         leadNumber: "LEAD-301",
@@ -48,7 +45,6 @@ export const leadsService = {
 
   async getOpportunities(): Promise<Opportunity[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/opportunities`).then(r => r.json())
-    await delay(10000); // 10 second delay for demo
     return [
       {
         opportunityNumber: "OPP-401",
