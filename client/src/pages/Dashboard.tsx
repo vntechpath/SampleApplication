@@ -16,6 +16,7 @@ import { inventoryService } from "@/services/inventoryService";
 import { ordersService } from "@/services/ordersService";
 import { leadsService } from "@/services/leadsService";
 import { analyticsService } from "@/services/analyticsService";
+import { searchService } from "@/services/searchService";
 
 type MenuOption = 'warehouse' | 'dashboard' | 'inventory' | 'orders' | 'po' | 'leads' | 'opportunities' | 'analytics';
 
@@ -23,6 +24,9 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function Dashboard() {
   const [searchValue, setSearchValue] = useState("");
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState<MenuOption>('warehouse');
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [isSkuModalOpen, setIsSkuModalOpen] = useState(false);
@@ -253,7 +257,19 @@ export default function Dashboard() {
     },
   ];
 
-  const filteredInventory = mockInventoryData.filter(item => 
+  const handleSkuSearch = async (query: string) => {
+    try {
+      setIsSearchLoading(true);
+      const results = await searchService.searchInventory(query);
+      setSearchResults(results);
+      setHasSearched(true);
+      setSelectedMenu('inventory');
+    } finally {
+      setIsSearchLoading(false);
+    }
+  };
+
+  const filteredInventory = hasSearched && searchResults.length > 0 ? searchResults : mockInventoryData.filter(item => 
     searchValue === "" || 
     item.sku.toLowerCase().includes(searchValue.toLowerCase()) ||
     item.productName.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -286,7 +302,12 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
-      <SkuSearchInput value={searchValue} onChange={setSearchValue} />
+      <SkuSearchInput 
+        value={searchValue} 
+        onChange={setSearchValue}
+        onSearch={handleSkuSearch}
+        isLoading={isSearchLoading}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4">
         <div className="grid grid-cols-2 gap-3">

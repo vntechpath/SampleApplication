@@ -10,6 +10,7 @@ export const apiConfig = {
   ENDPOINTS: {
     WAREHOUSE: '/warehouses',
     INVENTORY: '/inventory',
+    INVENTORY_SEARCH: '/inventory/search',
     INVENTORY_ALTERNATIVES: '/inventory/alternatives',
     OPEN_ORDERS: '/orders/open',
     PURCHASE_ORDERS: '/orders/purchase',
