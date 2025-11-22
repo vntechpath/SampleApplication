@@ -60,8 +60,10 @@ export default function Dashboard() {
   const handleSkuSearch = async (query: string) => {
     try {
       setIsSearchLoading(true);
+      setHasSearched(true);
+      setSelectedMenu('inventory');
       
-      // Load all data with incremental delays
+      // Set all loading states
       setIsLoadingWarehouse(true);
       setIsLoadingInventory(true);
       setIsLoadingAlternatives(true);
@@ -71,85 +73,89 @@ export default function Dashboard() {
       setIsLoadingOpportunities(true);
       setIsLoadingAnalytics(true);
 
-      // Load warehouse data (0ms delay)
-      try {
-        const warehouseData = await warehouseService.getWarehouseStock();
-        setMockWarehouseStock(warehouseData);
-      } finally {
+      // Load warehouse data immediately (0ms)
+      warehouseService.getWarehouseStock().then(data => {
+        setMockWarehouseStock(data);
         setIsLoadingWarehouse(false);
-      }
+      });
 
-      // Load inventory data (1000ms delay)
-      try {
-        await delay(1000);
-        const inventoryData = await inventoryService.getInventoryItems();
-        const results = await searchService.searchInventory(query);
-        setSearchResults(results);
-        setMockInventoryData(inventoryData);
-      } finally {
-        setIsLoadingInventory(false);
-      }
+      // Load inventory + search results (with 1s visual delay)
+      setTimeout(async () => {
+        try {
+          const [inventoryData, results] = await Promise.all([
+            inventoryService.getInventoryItems(),
+            searchService.searchInventory(query)
+          ]);
+          setMockInventoryData(inventoryData);
+          setSearchResults(results);
+        } finally {
+          setIsLoadingInventory(false);
+        }
+      }, 1000);
 
-      // Load alternative skus (2000ms delay)
-      try {
-        await delay(1000);
-        const altData = await inventoryService.getAlternativeSkus();
-        setMockAlternativeSkus(altData);
-      } finally {
-        setIsLoadingAlternatives(false);
-      }
+      // Load alternatives (with 2s visual delay)
+      setTimeout(async () => {
+        try {
+          const altData = await inventoryService.getAlternativeSkus();
+          setMockAlternativeSkus(altData);
+        } finally {
+          setIsLoadingAlternatives(false);
+        }
+      }, 2000);
 
-      // Load open orders (3000ms delay)
-      try {
-        await delay(1000);
-        const ordersData = await ordersService.getOpenOrders();
-        setMockOpenOrders(ordersData);
-      } finally {
-        setIsLoadingOrders(false);
-      }
+      // Load open orders (with 3s visual delay)
+      setTimeout(async () => {
+        try {
+          const ordersData = await ordersService.getOpenOrders();
+          setMockOpenOrders(ordersData);
+        } finally {
+          setIsLoadingOrders(false);
+        }
+      }, 3000);
 
-      // Load purchase orders (4000ms delay)
-      try {
-        await delay(1000);
-        const poData = await ordersService.getPurchaseOrders();
-        setMockPurchaseOrders(poData);
-      } finally {
-        setIsLoadingPOs(false);
-      }
+      // Load purchase orders (with 4s visual delay)
+      setTimeout(async () => {
+        try {
+          const poData = await ordersService.getPurchaseOrders();
+          setMockPurchaseOrders(poData);
+        } finally {
+          setIsLoadingPOs(false);
+        }
+      }, 4000);
 
-      // Load leads (5000ms delay)
-      try {
-        await delay(1000);
-        const leadsData = await leadsService.getLeads();
-        setMockLeads(leadsData);
-      } finally {
-        setIsLoadingLeads(false);
-      }
+      // Load leads (with 5s visual delay)
+      setTimeout(async () => {
+        try {
+          const leadsData = await leadsService.getLeads();
+          setMockLeads(leadsData);
+        } finally {
+          setIsLoadingLeads(false);
+        }
+      }, 5000);
 
-      // Load opportunities (6000ms delay)
-      try {
-        await delay(1000);
-        const oppsData = await leadsService.getOpportunities();
-        setMockOpportunities(oppsData);
-      } finally {
-        setIsLoadingOpportunities(false);
-      }
+      // Load opportunities (with 6s visual delay)
+      setTimeout(async () => {
+        try {
+          const oppsData = await leadsService.getOpportunities();
+          setMockOpportunities(oppsData);
+        } finally {
+          setIsLoadingOpportunities(false);
+        }
+      }, 6000);
 
-      // Load analytics (7000ms delay)
-      try {
-        await delay(1000);
-        const [invChart, costChart] = await Promise.all([
-          analyticsService.getInventoryChartData(),
-          analyticsService.getCostAnalysisData()
-        ]);
-        setInventoryChartData(invChart);
-        setCostAnalysisData(costChart);
-      } finally {
-        setIsLoadingAnalytics(false);
-      }
-
-      setHasSearched(true);
-      setSelectedMenu('inventory');
+      // Load analytics (with 7s visual delay)
+      setTimeout(async () => {
+        try {
+          const [invChart, costChart] = await Promise.all([
+            analyticsService.getInventoryChartData(),
+            analyticsService.getCostAnalysisData()
+          ]);
+          setInventoryChartData(invChart);
+          setCostAnalysisData(costChart);
+        } finally {
+          setIsLoadingAnalytics(false);
+        }
+      }, 7000);
     } finally {
       setIsSearchLoading(false);
     }
