@@ -21,9 +21,12 @@ export interface PurchaseOrder {
   status: string;
 }
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const ordersService = {
   async getOpenOrders(): Promise<OpenOrder[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/orders/open`).then(r => r.json())
+    await delay(10000); // 10 second delay for demo
     return [
       {
         orderNumber: "ORD-1001",
@@ -57,6 +60,7 @@ export const ordersService = {
 
   async getPurchaseOrders(): Promise<PurchaseOrder[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/orders/purchase`).then(r => r.json())
+    await delay(10000); // 10 second delay for demo
     return [
       {
         poNumber: "PO-5001",

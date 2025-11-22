@@ -7,6 +7,7 @@ import { InventoryChart } from "@/components/InventoryChart";
 import { CostAnalysisChart } from "@/components/CostAnalysisChart";
 import { SkuDetailModal } from "@/components/SkuDetailModal";
 import { DetailsModal } from "@/components/DetailsModal";
+import { DataLoader } from "@/components/DataLoader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,31 +40,37 @@ export default function Dashboard() {
   const [mockOpportunities, setMockOpportunities] = useState<any[]>([]);
   const [inventoryChartData, setInventoryChartData] = useState<any[]>([]);
   const [costAnalysisData, setCostAnalysisData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load data from services
   useEffect(() => {
     const loadData = async () => {
-      const [warehouse, inventory, alternatives, orders, pos, leads, opportunities, invChart, costChart] = await Promise.all([
-        warehouseService.getWarehouseStock(),
-        inventoryService.getInventoryItems(),
-        inventoryService.getAlternativeSkus(),
-        ordersService.getOpenOrders(),
-        ordersService.getPurchaseOrders(),
-        leadsService.getLeads(),
-        leadsService.getOpportunities(),
-        analyticsService.getInventoryChartData(),
-        analyticsService.getCostAnalysisData()
-      ]);
+      try {
+        setIsLoading(true);
+        const [warehouse, inventory, alternatives, orders, pos, leads, opportunities, invChart, costChart] = await Promise.all([
+          warehouseService.getWarehouseStock(),
+          inventoryService.getInventoryItems(),
+          inventoryService.getAlternativeSkus(),
+          ordersService.getOpenOrders(),
+          ordersService.getPurchaseOrders(),
+          leadsService.getLeads(),
+          leadsService.getOpportunities(),
+          analyticsService.getInventoryChartData(),
+          analyticsService.getCostAnalysisData()
+        ]);
 
-      setMockWarehouseStock(warehouse);
-      setMockInventoryData(inventory);
-      setMockAlternativeSkus(alternatives);
-      setMockOpenOrders(orders);
-      setMockPurchaseOrders(pos);
-      setMockLeads(leads);
-      setMockOpportunities(opportunities);
-      setInventoryChartData(invChart);
-      setCostAnalysisData(costChart);
+        setMockWarehouseStock(warehouse);
+        setMockInventoryData(inventory);
+        setMockAlternativeSkus(alternatives);
+        setMockOpenOrders(orders);
+        setMockPurchaseOrders(pos);
+        setMockLeads(leads);
+        setMockOpportunities(opportunities);
+        setInventoryChartData(invChart);
+        setCostAnalysisData(costChart);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadData();
@@ -185,6 +192,14 @@ export default function Dashboard() {
       opportunities: mockOpportunities.filter(opp => opp.sku === sku),
     };
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 overflow-y-auto p-6">
+        <DataLoader message="Loading warehouse data..." />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">

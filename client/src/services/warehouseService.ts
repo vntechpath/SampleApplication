@@ -12,9 +12,12 @@ export interface WarehouseStock {
   manager: string;
 }
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const warehouseService = {
   async getWarehouseStock(): Promise<WarehouseStock[]> {
     // TODO: Replace with API call: return fetch(`${API_URL}/warehouses`).then(r => r.json())
+    await delay(10000); // 10 second delay for demo
     return [
       {
         warehouseName: "Warehouse A",
