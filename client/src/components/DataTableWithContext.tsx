@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { ContextMenu } from "./ContextMenu";
+import { exportToCSV } from "@/lib/csvExport";
 import {
   Table,
   TableBody,
@@ -128,8 +129,9 @@ export function DataTableWithContext<T extends Record<string, any>>({
           y={contextMenu.y}
           onClose={() => setContextMenu(null)}
           onExportCSV={() => {
-            console.log('Exporting row to CSV:', contextMenu.row);
-            onExportRow?.(contextMenu.row, 'csv');
+            const identifier = Object.values(contextMenu.row)[0] || 'export';
+            exportToCSV(contextMenu.row, `data-${identifier}`);
+            setContextMenu(null);
           }}
           onExportExcel={() => {
             console.log('Exporting row to Excel:', contextMenu.row);

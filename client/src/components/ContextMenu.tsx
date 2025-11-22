@@ -9,9 +9,10 @@ interface ContextMenuProps {
   onExportExcel: () => void;
   onViewDetails: () => void;
   onOpenWebPage: () => void;
+  rowIdentifier?: string;
 }
 
-export function ContextMenu({ x, y, onClose, onExportCSV, onExportExcel, onViewDetails, onOpenWebPage }: ContextMenuProps) {
+export function ContextMenu({ x, y, onClose, onExportCSV, onExportExcel, onViewDetails, onOpenWebPage, rowIdentifier }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
