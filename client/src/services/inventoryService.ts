@@ -14,10 +14,19 @@ export interface InventoryItem {
 }
 
 export interface AlternativeSku {
-  primarySku: string;
+  primarySku?: string;
   alternativeSku: string;
   description: string;
   conversionRatio: string;
+}
+
+// API Response model for Alternative SKUs
+export interface GetAltSkusResponse {
+  alternativeSKUs: Array<{
+    alternativeSku: string;
+    description: string;
+    conversionRatio: string;
+  }>;
 }
 
 // Sample data for development/demo
@@ -114,16 +123,30 @@ export const inventoryService = {
     return sampleInventoryData;
   },
 
-  async getAlternativeSkus(): Promise<AlternativeSku[]> {
-    // TODO: Replace with actual API call
-    const response = await apiClient.get<AlternativeSku[]>(apiConfig.ENDPOINTS.INVENTORY_ALTERNATIVES);
-    
-    if (response.success && response.data) {
-      return response.data;
+  async getAlternativeSkus(): Promise<{ data: AlternativeSku[]; hasError: boolean }> {
+    try {
+      const response = await apiClient.get<GetAltSkusResponse>(apiConfig.ENDPOINTS.INVENTORY_ALTERNATIVES);
+      
+      console.log('Alternative SKUs API Response:', response);
+      
+      if (response.success && response.data?.alternativeSKUs) {
+        console.log('Using API data for Alternative SKUs:', response.data.alternativeSKUs);
+        return {
+          data: response.data.alternativeSKUs.map(item => ({
+            alternativeSku: item.alternativeSku,
+            description: item.description,
+            conversionRatio: item.conversionRatio
+          })),
+          hasError: false
+        };
+      }
+      
+      // API returned but no data
+      console.warn('Alternative SKUs API returned no data');
+      return { data: [], hasError: false };
+    } catch (error) {
+      console.warn('Error fetching alternative SKUs from API:', error);
+      return { data: [], hasError: true };
     }
-    
-    // Fallback to sample data if API is not available
-    console.warn('Using sample alternative SKUs data - API not available');
-    return sampleAlternativeSKUs;
   }
 };

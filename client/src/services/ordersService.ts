@@ -11,6 +11,19 @@ export interface OpenOrder {
   status: string;
 }
 
+// API Response model for Open Orders
+export interface GetOpenOrdersResponse {
+  openOrders: Array<{
+    orderNumber: string;
+    sku: string;
+    customerName: string;
+    quantity: number;
+    totalAmount: string;
+    orderDate: string;
+    status: string;
+  }>;
+}
+
 export interface PurchaseOrder {
   poNumber: string;
   sku: string;
@@ -74,17 +87,24 @@ const samplePurchaseOrders: PurchaseOrder[] = [
 ];
 
 export const ordersService = {
-  async getOpenOrders(): Promise<OpenOrder[]> {
-    // TODO: Replace with actual API call
-    const response = await apiClient.get<OpenOrder[]>(apiConfig.ENDPOINTS.OPEN_ORDERS);
-    
-    if (response.success && response.data) {
-      return response.data;
+  async getOpenOrders(): Promise<{ data: OpenOrder[]; hasError: boolean }> {
+    try {
+      const response = await apiClient.get<GetOpenOrdersResponse>(apiConfig.ENDPOINTS.OPEN_ORDERS);
+      
+      console.log('Open Orders API Response:', response);
+      
+      if (response.success && response.data?.openOrders) {
+        console.log('Using API data for Open Orders:', response.data.openOrders);
+        return { data: response.data.openOrders, hasError: false };
+      }
+      
+      // API returned but no data
+      console.warn('Open Orders API returned no data');
+      return { data: [], hasError: false };
+    } catch (error) {
+      console.warn('Error fetching open orders from API:', error);
+      return { data: [], hasError: true };
     }
-    
-    // Fallback to sample data if API is not available
-    console.warn('Using sample open orders data - API not available');
-    return sampleOpenOrders;
   },
 
   async getPurchaseOrders(): Promise<PurchaseOrder[]> {

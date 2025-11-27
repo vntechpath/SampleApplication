@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Package, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { SkuSearchInput } from "@/components/SkuSearchInput";
+import { SkuSelectionModal } from "@/components/SkuSelectionModal";
 import { MetricCard } from "@/components/MetricCard";
 import { DataTableWithContext, Column } from "@/components/DataTableWithContext";
 import { InventoryChart } from "@/components/InventoryChart";
@@ -59,7 +60,18 @@ export default function Dashboard() {
   const [inventoryChartData, setInventoryChartData] = useState<any[]>([]);
   const [costAnalysisData, setCostAnalysisData] = useState<any[]>([]);
 
-  const handleSkuSearch = async (query: string) => {
+  // Error states for API failures
+  const [altSkusError, setAltSkusError] = useState(false);
+  const [openOrdersError, setOpenOrdersError] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+
+  // SKU Selection modal states
+  const [skuSelectionModal, setSkuSelectionModal] = useState({
+    isOpen: false,
+    results: [] as any[],
+  });
+
+  const loadAllData = async (sku: string) => {
     try {
       setIsSearchLoading(true);
       setHasSearched(true);
@@ -85,7 +97,7 @@ export default function Dashboard() {
         try {
           const [inventoryData, results] = await Promise.all([
             inventoryService.getInventoryItems(),
-            searchService.searchInventory(query)
+            searchService.searchInventory(sku)
           ]);
           setMockInventoryData(inventoryData);
           setSearchResults(results);
@@ -97,8 +109,9 @@ export default function Dashboard() {
       // Load alternatives (with 2s visual delay)
       setTimeout(async () => {
         try {
-          const altData = await inventoryService.getAlternativeSkus();
-          setMockAlternativeSkus(altData);
+          const result = await inventoryService.getAlternativeSkus();
+          setMockAlternativeSkus(result.data);
+          setAltSkusError(result.hasError);
         } finally {
           setIsLoadingAlternatives(false);
         }
@@ -107,8 +120,9 @@ export default function Dashboard() {
       // Load open orders (with 3s visual delay)
       setTimeout(async () => {
         try {
-          const ordersData = await ordersService.getOpenOrders();
-          setMockOpenOrders(ordersData);
+          const result = await ordersService.getOpenOrders();
+          setMockOpenOrders(result.data);
+          setOpenOrdersError(result.hasError);
         } finally {
           setIsLoadingOrders(false);
         }
@@ -160,6 +174,101 @@ export default function Dashboard() {
     } finally {
       setIsSearchLoading(false);
     }
+  };
+
+  const handleSkuSearch = async (query: string) => {
+    try {
+      setIsSearchLoading(true);
+      setSearchError(false);
+
+      // Call SKU search API
+      const searchResult = await searchService.searchSKU(query);
+
+      if (searchResult.hasError) {
+        // Show all sections with error information
+        setHasSearched(true);
+        setSearchError(true);
+        setIsSearchLoading(false);
+        
+        // Reset all data states to empty
+        setMockWarehouseStock([]);
+        setMockInventoryData([]);
+        setSearchResults([]);
+        setMockAlternativeSkus([]);
+        setMockOpenOrders([]);
+        setMockPurchaseOrders([]);
+        setMockLeads([]);
+        setMockOpportunities([]);
+        setInventoryChartData([]);
+        setCostAnalysisData([]);
+        
+        // Stop all loading states
+        setIsLoadingWarehouse(false);
+        setIsLoadingInventory(false);
+        setIsLoadingAlternatives(false);
+        setIsLoadingOrders(false);
+        setIsLoadingPOs(false);
+        setIsLoadingLeads(false);
+        setIsLoadingOpportunities(false);
+        setIsLoadingAnalytics(false);
+        return;
+      }
+
+      // If no results found
+      if (searchResult.results.length === 0) {
+        setIsSearchLoading(false);
+        return;
+      }
+
+      // If exactly 1 result - proceed with loading all data
+      if (searchResult.results.length === 1) {
+        setSearchValue(searchResult.results[0].sku);
+        setSearchError(false);
+        await loadAllData(searchResult.results[0].sku);
+        return;
+      }
+
+      // If more than 1 result - show modal for user to select
+      setSkuSelectionModal({
+        isOpen: true,
+        results: searchResult.results,
+      });
+      setSearchError(false);
+      setIsSearchLoading(false);
+    } catch (error) {
+      console.error('Error during SKU search:', error);
+      setHasSearched(true);
+      setSearchError(true);
+      setIsSearchLoading(false);
+      
+      // Reset all data states to empty
+      setMockWarehouseStock([]);
+      setMockInventoryData([]);
+      setSearchResults([]);
+      setMockAlternativeSkus([]);
+      setMockOpenOrders([]);
+      setMockPurchaseOrders([]);
+      setMockLeads([]);
+      setMockOpportunities([]);
+      setInventoryChartData([]);
+      setCostAnalysisData([]);
+      
+      // Stop all loading states
+      setIsLoadingWarehouse(false);
+      setIsLoadingInventory(false);
+      setIsLoadingAlternatives(false);
+      setIsLoadingOrders(false);
+      setIsLoadingPOs(false);
+      setIsLoadingLeads(false);
+      setIsLoadingOpportunities(false);
+      setIsLoadingAnalytics(false);
+    }
+  };
+
+  const handleSkuSelect = (sku: string) => {
+    setSearchValue(sku);
+    setSkuSelectionModal({ isOpen: false, results: [] });
+    loadAllData(sku);
   };
 
   const warehouseColumns: Column<any>[] = [
@@ -315,6 +424,13 @@ export default function Dashboard() {
 
       {hasSearched && (
         <>
+          {searchError && (
+            <div className="bg-destructive/10 border border-destructive rounded-lg p-4 mb-4">
+              <h3 className="font-semibold text-destructive mb-1">Search Failed</h3>
+              <p className="text-sm text-destructive/80">Unable to search for the SKU. Please check your input and try again.</p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-4">
             <div className="grid grid-cols-2 gap-3">
               <MetricCard
@@ -351,6 +467,20 @@ export default function Dashboard() {
                       <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">Loading...</p>
+                  </div>
+                </div>
+              ) : altSkusError ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-destructive mb-1">Failed to Load Data</p>
+                    <p className="text-xs text-muted-foreground">Unable to retrieve alternative SKUs. Please try again.</p>
+                  </div>
+                </div>
+              ) : mockAlternativeSkus.length === 0 ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">No Data Found</p>
+                    <p className="text-xs text-muted-foreground">No alternative SKUs available.</p>
                   </div>
                 </div>
               ) : (
@@ -456,6 +586,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={mockWarehouseStock}
                   columns={warehouseColumns}
+                  hasError={searchError}
                   onViewDetails={(row) => handleViewDetails(row, `Warehouse Details: ${row.warehouseName}`, 'warehouse')}
                   onExportRow={(row, format) => console.log(`Exporting ${row.warehouseName} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/warehouse/${row.warehouseName}`, '_blank')}
@@ -481,6 +612,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={searchResults}
                   columns={inventoryColumns}
+                  hasError={searchError}
                   onViewDetails={(row) => handleViewDetails(row, `Inventory Details: ${row.sku}`, 'inventory')}
                   onExportRow={(row, format) => console.log(`Exporting ${row.sku} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/sku/${row.sku}`, '_blank')}
@@ -495,6 +627,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={mockOpenOrders}
                   columns={orderColumns}
+                  hasError={openOrdersError}
                   onViewDetails={(row) => handleViewDetails(row, `Order Details: ${row.orderNumber}`)}
                   onExportRow={(row, format) => console.log(`Exporting ${row.orderNumber} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/order/${row.orderNumber}`, '_blank')}
@@ -509,6 +642,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={mockPurchaseOrders}
                   columns={poColumns}
+                  hasError={searchError}
                   onViewDetails={(row) => handleViewDetails(row, `Purchase Order Details: ${row.poNumber}`)}
                   onExportRow={(row, format) => console.log(`Exporting ${row.poNumber} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/po/${row.poNumber}`, '_blank')}
@@ -523,6 +657,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={mockLeads}
                   columns={leadColumns}
+                  hasError={searchError}
                   onViewDetails={(row) => handleViewDetails(row, `Lead Details: ${row.leadNumber}`)}
                   onExportRow={(row, format) => console.log(`Exporting ${row.leadNumber} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/lead/${row.leadNumber}`, '_blank')}
@@ -537,6 +672,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={mockOpportunities}
                   columns={opportunityColumns}
+                  hasError={searchError}
                   onViewDetails={(row) => handleViewDetails(row, `Opportunity Details: ${row.opportunityNumber}`)}
                   onExportRow={(row, format) => console.log(`Exporting ${row.opportunityNumber} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/opportunity/${row.opportunityNumber}`, '_blank')}
@@ -567,6 +703,13 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <SkuSelectionModal
+        isOpen={skuSelectionModal.isOpen}
+        onClose={() => setSkuSelectionModal({ isOpen: false, results: [] })}
+        results={skuSelectionModal.results}
+        onSelect={handleSkuSelect}
+      />
 
       {selectedSku && (
         <SkuDetailModal

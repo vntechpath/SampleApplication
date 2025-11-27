@@ -3,16 +3,16 @@
 
 export const apiConfig = {
   // Base URL for all API calls
-  // Change this to your actual API endpoint
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
+  // Configure your API base URL here
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:123456',
   
   // API Endpoints
   ENDPOINTS: {
     WAREHOUSE: '/warehouses',
     INVENTORY: '/inventory',
-    INVENTORY_SEARCH: '/inventory/search',
-    INVENTORY_ALTERNATIVES: '/inventory/alternatives',
-    OPEN_ORDERS: '/orders/open',
+    INVENTORY_SEARCH: '/api/InventoryAPI/SearchSKU',
+    INVENTORY_ALTERNATIVES: '/api/InventoryAPI/GetAltSKUs',
+    OPEN_ORDERS: '/api/InventoryAPI/GetOpenOrders',
     PURCHASE_ORDERS: '/orders/purchase',
     LEADS: '/leads',
     OPPORTUNITIES: '/opportunities',
