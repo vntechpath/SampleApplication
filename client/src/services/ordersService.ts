@@ -91,7 +91,10 @@ export const ordersService = {
     try {
       const response = await apiClient.get<GetOpenOrdersResponse>(apiConfig.ENDPOINTS.OPEN_ORDERS);
       
+      console.log('Open Orders API Response:', response);
+      
       if (response.success && response.data?.openOrders) {
+        console.log('Using API data for Open Orders:', response.data.openOrders);
         return response.data.openOrders;
       }
     } catch (error) {

@@ -127,7 +127,10 @@ export const inventoryService = {
     try {
       const response = await apiClient.get<GetAltSkusResponse>(apiConfig.ENDPOINTS.INVENTORY_ALTERNATIVES);
       
+      console.log('Alternative SKUs API Response:', response);
+      
       if (response.success && response.data?.alternativeSKUs) {
+        console.log('Using API data for Alternative SKUs:', response.data.alternativeSKUs);
         return response.data.alternativeSKUs.map(item => ({
           alternativeSku: item.alternativeSku,
           description: item.description,
