@@ -82,20 +82,44 @@ const generateSampleResults = (searchQuery: string): SearchResult[] => {
   );
 };
 
+export interface SKUSearchResponse {
+  results: SearchResult[];
+  hasError: boolean;
+}
+
 export const searchService = {
+  async searchSKU(query: string): Promise<SKUSearchResponse> {
+    if (!query || query.trim().length === 0) {
+      return { results: [], hasError: false };
+    }
+
+    try {
+      const response = await apiClient.get<{ results: SearchResult[] }>(
+        `${apiConfig.ENDPOINTS.INVENTORY_SEARCH}?sku=${encodeURIComponent(query)}`
+      );
+
+      console.log('SKU Search API Response:', response);
+
+      if (response.success && response.data?.results) {
+        console.log('Using API data for SKU search:', response.data.results);
+        return { results: response.data.results, hasError: false };
+      }
+
+      // API returned but no data
+      console.warn('SKU Search API returned no data');
+      return { results: [], hasError: false };
+    } catch (error) {
+      console.warn('Error fetching SKU search from API:', error);
+      return { results: [], hasError: true };
+    }
+  },
+
   async searchInventory(query: string): Promise<SearchResult[]> {
     if (!query || query.trim().length === 0) {
       return [];
     }
 
-    // TODO: Replace with actual API call
-    // const response = await apiClient.get<SearchResult[]>(`${apiConfig.ENDPOINTS.INVENTORY_SEARCH}?q=${encodeURIComponent(query)}`);
-    // 
-    // if (response.success && response.data) {
-    //   return response.data;
-    // }
-
-    // Fallback to sample data
+    // Fallback to sample data for backward compatibility
     console.warn(`Using sample search results for query: "${query}"`);
     return generateSampleResults(query);
   }

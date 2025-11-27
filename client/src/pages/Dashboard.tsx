@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Package, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { SkuSearchInput } from "@/components/SkuSearchInput";
+import { SkuSelectionModal } from "@/components/SkuSelectionModal";
 import { MetricCard } from "@/components/MetricCard";
 import { DataTableWithContext, Column } from "@/components/DataTableWithContext";
 import { InventoryChart } from "@/components/InventoryChart";
@@ -63,7 +64,13 @@ export default function Dashboard() {
   const [altSkusError, setAltSkusError] = useState(false);
   const [openOrdersError, setOpenOrdersError] = useState(false);
 
-  const handleSkuSearch = async (query: string) => {
+  // SKU Selection modal states
+  const [skuSelectionModal, setSkuSelectionModal] = useState({
+    isOpen: false,
+    results: [] as any[],
+  });
+
+  const loadAllData = async (sku: string) => {
     try {
       setIsSearchLoading(true);
       setHasSearched(true);
@@ -89,7 +96,7 @@ export default function Dashboard() {
         try {
           const [inventoryData, results] = await Promise.all([
             inventoryService.getInventoryItems(),
-            searchService.searchInventory(query)
+            searchService.searchInventory(sku)
           ]);
           setMockInventoryData(inventoryData);
           setSearchResults(results);
@@ -166,6 +173,50 @@ export default function Dashboard() {
     } finally {
       setIsSearchLoading(false);
     }
+  };
+
+  const handleSkuSearch = async (query: string) => {
+    try {
+      setIsSearchLoading(true);
+
+      // Call SKU search API
+      const searchResult = await searchService.searchSKU(query);
+
+      if (searchResult.hasError) {
+        // Handle error - show error message
+        setIsSearchLoading(false);
+        return;
+      }
+
+      // If no results found
+      if (searchResult.results.length === 0) {
+        setIsSearchLoading(false);
+        return;
+      }
+
+      // If exactly 1 result - proceed with loading all data
+      if (searchResult.results.length === 1) {
+        setSearchValue(searchResult.results[0].sku);
+        await loadAllData(searchResult.results[0].sku);
+        return;
+      }
+
+      // If more than 1 result - show modal for user to select
+      setSkuSelectionModal({
+        isOpen: true,
+        results: searchResult.results,
+      });
+      setIsSearchLoading(false);
+    } catch (error) {
+      console.error('Error during SKU search:', error);
+      setIsSearchLoading(false);
+    }
+  };
+
+  const handleSkuSelect = (sku: string) => {
+    setSearchValue(sku);
+    setSkuSelectionModal({ isOpen: false, results: [] });
+    loadAllData(sku);
   };
 
   const warehouseColumns: Column<any>[] = [
@@ -588,6 +639,13 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <SkuSelectionModal
+        isOpen={skuSelectionModal.isOpen}
+        onClose={() => setSkuSelectionModal({ isOpen: false, results: [] })}
+        results={skuSelectionModal.results}
+        onSelect={handleSkuSelect}
+      />
 
       {selectedSku && (
         <SkuDetailModal
