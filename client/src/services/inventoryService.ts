@@ -141,8 +141,8 @@ export const inventoryService = {
       console.warn('Error fetching alternative SKUs from API:', error);
     }
     
-    // Fallback to sample data if API is not available
-    console.warn('Using sample alternative SKUs data - API not available');
-    return sampleAlternativeSKUs;
+    // Return empty array if API fails - no data fallback
+    console.warn('Alternative SKUs API failed - returning empty data');
+    return [];
   }
 };

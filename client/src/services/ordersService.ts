@@ -101,9 +101,9 @@ export const ordersService = {
       console.warn('Error fetching open orders from API:', error);
     }
     
-    // Fallback to sample data if API is not available
-    console.warn('Using sample open orders data - API not available');
-    return sampleOpenOrders;
+    // Return empty array if API fails - no data fallback
+    console.warn('Open Orders API failed - returning empty data');
+    return [];
   },
 
   async getPurchaseOrders(): Promise<PurchaseOrder[]> {

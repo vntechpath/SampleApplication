@@ -66,6 +66,20 @@ export function DataTableWithContext<T extends Record<string, any>>({
     setContextMenu({ x: e.clientX, y: e.clientY, row });
   };
 
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-96 rounded-lg border bg-muted/30">
+        <div className="text-center">
+          <div className="h-12 w-12 mx-auto mb-4 opacity-50 flex items-center justify-center">
+            <Filter className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">No Data Found</h3>
+          <p className="text-sm text-muted-foreground">No records match your search criteria. Please try a different search.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border overflow-hidden">
