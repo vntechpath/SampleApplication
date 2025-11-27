@@ -76,8 +76,8 @@ export function DataTableWithContext<T extends Record<string, any>>({
             <div className="h-12 w-12 mx-auto mb-4 opacity-50 flex items-center justify-center">
               <Filter className="h-12 w-12 text-destructive" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">Failed to Load Data</h3>
-            <p className="text-sm text-muted-foreground">Unable to retrieve data from the server. Please try again.</p>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Search Failed</h3>
+            <p className="text-sm text-muted-foreground">Unable to search for the SKU. Please check your input and try again.</p>
           </div>
         </div>
       );
