@@ -14,10 +14,19 @@ export interface InventoryItem {
 }
 
 export interface AlternativeSku {
-  primarySku: string;
+  primarySku?: string;
   alternativeSku: string;
   description: string;
   conversionRatio: string;
+}
+
+// API Response model for Alternative SKUs
+export interface GetAltSkusResponse {
+  alternativeSKUs: Array<{
+    alternativeSku: string;
+    description: string;
+    conversionRatio: string;
+  }>;
 }
 
 // Sample data for development/demo
@@ -115,11 +124,18 @@ export const inventoryService = {
   },
 
   async getAlternativeSkus(): Promise<AlternativeSku[]> {
-    // TODO: Replace with actual API call
-    const response = await apiClient.get<AlternativeSku[]>(apiConfig.ENDPOINTS.INVENTORY_ALTERNATIVES);
-    
-    if (response.success && response.data) {
-      return response.data;
+    try {
+      const response = await apiClient.get<GetAltSkusResponse>(apiConfig.ENDPOINTS.INVENTORY_ALTERNATIVES);
+      
+      if (response.success && response.data?.alternativeSKUs) {
+        return response.data.alternativeSKUs.map(item => ({
+          alternativeSku: item.alternativeSku,
+          description: item.description,
+          conversionRatio: item.conversionRatio
+        }));
+      }
+    } catch (error) {
+      console.warn('Error fetching alternative SKUs from API:', error);
     }
     
     // Fallback to sample data if API is not available

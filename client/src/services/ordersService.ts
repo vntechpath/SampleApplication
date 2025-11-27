@@ -11,6 +11,19 @@ export interface OpenOrder {
   status: string;
 }
 
+// API Response model for Open Orders
+export interface GetOpenOrdersResponse {
+  openOrders: Array<{
+    orderNumber: string;
+    sku: string;
+    customerName: string;
+    quantity: number;
+    totalAmount: string;
+    orderDate: string;
+    status: string;
+  }>;
+}
+
 export interface PurchaseOrder {
   poNumber: string;
   sku: string;
@@ -75,11 +88,14 @@ const samplePurchaseOrders: PurchaseOrder[] = [
 
 export const ordersService = {
   async getOpenOrders(): Promise<OpenOrder[]> {
-    // TODO: Replace with actual API call
-    const response = await apiClient.get<OpenOrder[]>(apiConfig.ENDPOINTS.OPEN_ORDERS);
-    
-    if (response.success && response.data) {
-      return response.data;
+    try {
+      const response = await apiClient.get<GetOpenOrdersResponse>(apiConfig.ENDPOINTS.OPEN_ORDERS);
+      
+      if (response.success && response.data?.openOrders) {
+        return response.data.openOrders;
+      }
+    } catch (error) {
+      console.warn('Error fetching open orders from API:', error);
     }
     
     // Fallback to sample data if API is not available
