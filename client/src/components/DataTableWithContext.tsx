@@ -26,6 +26,7 @@ interface DataTableWithContextProps<T> {
   onExportRow?: (row: T, format: 'csv' | 'excel') => void;
   onViewDetails?: (row: T) => void;
   onOpenWebPage?: (row: T) => void;
+  hasError?: boolean;
 }
 
 export function DataTableWithContext<T extends Record<string, any>>({
@@ -35,6 +36,7 @@ export function DataTableWithContext<T extends Record<string, any>>({
   onExportRow,
   onViewDetails,
   onOpenWebPage,
+  hasError = false,
 }: DataTableWithContextProps<T>) {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; row: T } | null>(null);
@@ -66,9 +68,23 @@ export function DataTableWithContext<T extends Record<string, any>>({
     setContextMenu({ x: e.clientX, y: e.clientY, row });
   };
 
-  if (data.length === 0) {
+  const renderEmptyState = () => {
+    if (hasError) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="h-12 w-12 mx-auto mb-4 opacity-50 flex items-center justify-center">
+              <Filter className="h-12 w-12 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Failed to Load Data</h3>
+            <p className="text-sm text-muted-foreground">Unable to retrieve data from the server. Please try again.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex items-center justify-center h-96 rounded-lg border bg-muted/30">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="h-12 w-12 mx-auto mb-4 opacity-50 flex items-center justify-center">
             <Filter className="h-12 w-12 text-muted-foreground" />
@@ -78,7 +94,7 @@ export function DataTableWithContext<T extends Record<string, any>>({
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -118,21 +134,29 @@ export function DataTableWithContext<T extends Record<string, any>>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map((row, index) => (
-              <TableRow
-                key={index}
-                className="cursor-pointer hover-elevate"
-                onClick={() => onRowClick?.(row)}
-                onContextMenu={(e) => handleContextMenu(e, row)}
-                data-testid={`row-data-${index}`}
-              >
-                {columns.map((column) => (
-                  <TableCell key={column.key} className="font-mono text-sm">
-                    {column.render ? column.render(row[column.key], row) : row[column.key]}
-                  </TableCell>
-                ))}
+            {data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  {renderEmptyState()}
+                </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              sortedData.map((row, index) => (
+                <TableRow
+                  key={index}
+                  className="cursor-pointer hover-elevate"
+                  onClick={() => onRowClick?.(row)}
+                  onContextMenu={(e) => handleContextMenu(e, row)}
+                  data-testid={`row-data-${index}`}
+                >
+                  {columns.map((column) => (
+                    <TableCell key={column.key} className="font-mono text-sm">
+                      {column.render ? column.render(row[column.key], row) : row[column.key]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

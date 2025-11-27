@@ -123,7 +123,7 @@ export const inventoryService = {
     return sampleInventoryData;
   },
 
-  async getAlternativeSkus(): Promise<AlternativeSku[]> {
+  async getAlternativeSkus(): Promise<{ data: AlternativeSku[]; hasError: boolean }> {
     try {
       const response = await apiClient.get<GetAltSkusResponse>(apiConfig.ENDPOINTS.INVENTORY_ALTERNATIVES);
       
@@ -131,18 +131,22 @@ export const inventoryService = {
       
       if (response.success && response.data?.alternativeSKUs) {
         console.log('Using API data for Alternative SKUs:', response.data.alternativeSKUs);
-        return response.data.alternativeSKUs.map(item => ({
-          alternativeSku: item.alternativeSku,
-          description: item.description,
-          conversionRatio: item.conversionRatio
-        }));
+        return {
+          data: response.data.alternativeSKUs.map(item => ({
+            alternativeSku: item.alternativeSku,
+            description: item.description,
+            conversionRatio: item.conversionRatio
+          })),
+          hasError: false
+        };
       }
+      
+      // API returned but no data
+      console.warn('Alternative SKUs API returned no data');
+      return { data: [], hasError: false };
     } catch (error) {
       console.warn('Error fetching alternative SKUs from API:', error);
+      return { data: [], hasError: true };
     }
-    
-    // Return empty array if API fails - no data fallback
-    console.warn('Alternative SKUs API failed - returning empty data');
-    return [];
   }
 };

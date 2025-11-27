@@ -87,7 +87,7 @@ const samplePurchaseOrders: PurchaseOrder[] = [
 ];
 
 export const ordersService = {
-  async getOpenOrders(): Promise<OpenOrder[]> {
+  async getOpenOrders(): Promise<{ data: OpenOrder[]; hasError: boolean }> {
     try {
       const response = await apiClient.get<GetOpenOrdersResponse>(apiConfig.ENDPOINTS.OPEN_ORDERS);
       
@@ -95,15 +95,16 @@ export const ordersService = {
       
       if (response.success && response.data?.openOrders) {
         console.log('Using API data for Open Orders:', response.data.openOrders);
-        return response.data.openOrders;
+        return { data: response.data.openOrders, hasError: false };
       }
+      
+      // API returned but no data
+      console.warn('Open Orders API returned no data');
+      return { data: [], hasError: false };
     } catch (error) {
       console.warn('Error fetching open orders from API:', error);
+      return { data: [], hasError: true };
     }
-    
-    // Return empty array if API fails - no data fallback
-    console.warn('Open Orders API failed - returning empty data');
-    return [];
   },
 
   async getPurchaseOrders(): Promise<PurchaseOrder[]> {

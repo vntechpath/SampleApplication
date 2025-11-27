@@ -59,6 +59,10 @@ export default function Dashboard() {
   const [inventoryChartData, setInventoryChartData] = useState<any[]>([]);
   const [costAnalysisData, setCostAnalysisData] = useState<any[]>([]);
 
+  // Error states for API failures
+  const [altSkusError, setAltSkusError] = useState(false);
+  const [openOrdersError, setOpenOrdersError] = useState(false);
+
   const handleSkuSearch = async (query: string) => {
     try {
       setIsSearchLoading(true);
@@ -97,8 +101,9 @@ export default function Dashboard() {
       // Load alternatives (with 2s visual delay)
       setTimeout(async () => {
         try {
-          const altData = await inventoryService.getAlternativeSkus();
-          setMockAlternativeSkus(altData);
+          const result = await inventoryService.getAlternativeSkus();
+          setMockAlternativeSkus(result.data);
+          setAltSkusError(result.hasError);
         } finally {
           setIsLoadingAlternatives(false);
         }
@@ -107,8 +112,9 @@ export default function Dashboard() {
       // Load open orders (with 3s visual delay)
       setTimeout(async () => {
         try {
-          const ordersData = await ordersService.getOpenOrders();
-          setMockOpenOrders(ordersData);
+          const result = await ordersService.getOpenOrders();
+          setMockOpenOrders(result.data);
+          setOpenOrdersError(result.hasError);
         } finally {
           setIsLoadingOrders(false);
         }
@@ -353,6 +359,20 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground mt-2">Loading...</p>
                   </div>
                 </div>
+              ) : altSkusError ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-destructive mb-1">Failed to Load Data</p>
+                    <p className="text-xs text-muted-foreground">Unable to retrieve alternative SKUs. Please try again.</p>
+                  </div>
+                </div>
+              ) : mockAlternativeSkus.length === 0 ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">No Data Found</p>
+                    <p className="text-xs text-muted-foreground">No alternative SKUs available.</p>
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-2 max-h-[140px] overflow-y-auto">
                   {mockAlternativeSkus.map((alt, idx) => (
@@ -495,6 +515,7 @@ export default function Dashboard() {
                 <DataTableWithContext
                   data={mockOpenOrders}
                   columns={orderColumns}
+                  hasError={openOrdersError}
                   onViewDetails={(row) => handleViewDetails(row, `Order Details: ${row.orderNumber}`)}
                   onExportRow={(row, format) => console.log(`Exporting ${row.orderNumber} to ${format}`)}
                   onOpenWebPage={(row) => window.open(`https://example.com/order/${row.orderNumber}`, '_blank')}
